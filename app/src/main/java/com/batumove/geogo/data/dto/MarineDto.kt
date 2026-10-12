@@ -1,40 +1,44 @@
 package com.batumove.geogo.data.dto
 
-import com.google.gson.annotations.SerializedName
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
+@Serializable
 data class MarineDto(
     val latitude: Double,
     val longitude: Double,
     val timezone: String,
-    val current: CurrentMarineDto?,
+    val current: CurrentMarineDto? = null,
     val hourly: HourlyMarineDto
 )
 
+@Serializable
 data class CurrentMarineDto(
     val time: String,
 
-    @SerializedName("wave_height")
-    val waveHeight: Double?,
+    @SerialName("wave_height")
+    val waveHeight: Double? = null,
 
-    @SerializedName("sea_surface_temperature")
-    val seaTemperature: Double?,
+    @SerialName("sea_surface_temperature")
+    val seaTemperature: Double? = null,
 
-    @SerializedName("wave_direction")
-    val waveDirection: Double?
+    @SerialName("wave_direction")
+    val waveDirection: Double? = null
 )
 
+@Serializable
 data class HourlyMarineDto(
     val time: List<String>,
 
-    @SerializedName("wave_height")
+    @SerialName("wave_height")
     val waveHeight: List<Double?>,
 
-    @SerializedName("sea_surface_temperature")
+    @SerialName("sea_surface_temperature")
     val seaTemperature: List<Double?>,
 
-    @SerializedName("wave_direction")
+    @SerialName("wave_direction")
     val waveDirection: List<Double?>,
 
-    @SerializedName("wave_period")
+    @SerialName("wave_period")
     val wavePeriod: List<Double?>
 )

@@ -1,37 +1,41 @@
 package com.batumove.geogo.data.dto
 
-import com.google.gson.annotations.SerializedName
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
+@Serializable
 data class AirQualityDto(
     val latitude: Double,
     val longitude: Double,
     val timezone: String,
-    val current: CurrentAirQualityDto?,
+    val current: CurrentAirQualityDto? = null,
     val hourly: HourlyAirQualityDto
 )
 
+@Serializable
 data class CurrentAirQualityDto(
     val time: String,
 
-    @SerializedName("european_aqi")
-    val europeanAqi: Int?,
+    @SerialName("european_aqi")
+    val europeanAqi: Int? = null,
 
-    @SerializedName("pm2_5")
-    val pm25: Double?,
+    @SerialName("pm2_5")
+    val pm25: Double? = null,
 
-    @SerializedName("pm10")
-    val pm10: Double?
+    @SerialName("pm10")
+    val pm10: Double? = null
 )
 
+@Serializable
 data class HourlyAirQualityDto(
     val time: List<String>,
 
-    @SerializedName("european_aqi")
+    @SerialName("european_aqi")
     val europeanAqi: List<Int?>,
 
-    @SerializedName("pm2_5")
+    @SerialName("pm2_5")
     val pm25: List<Double?>,
 
-    @SerializedName("pm10")
+    @SerialName("pm10")
     val pm10: List<Double?>
 )

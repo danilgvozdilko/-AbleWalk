@@ -1,88 +1,93 @@
 package com.batumove.geogo.data.dto
 
-import com.google.gson.annotations.SerializedName
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
+@Serializable
 data class WeatherDto(
     val latitude: Double,
     val longitude: Double,
     val timezone: String,
     val current: CurrentWeatherDto,
     val hourly: HourlyWeatherDto,
-    val daily: DailyWeather
+    val daily: DailyWeatherDto
 )
 
+@Serializable
 data class CurrentWeatherDto(
     val time: String,
 
-    @SerializedName("temperature_2m")
-    val temperature: Double?,
+    @SerialName("temperature_2m")
+    val temperature: Double? = null,
 
-    @SerializedName("apparent_temperature")
-    val feelsLike: Double?,
+    @SerialName("apparent_temperature")
+    val feelsLike: Double? = null,
 
-    @SerializedName("relative_humidity_2m")
-    val humidity: Int?,
+    @SerialName("relative_humidity_2m")
+    val humidity: Int? = null,
 
-    val precipitation: Double?,
+    val precipitation: Double? = null,
 
-    @SerializedName("weather_code")
-    val weatherCode: Int?,
+    @SerialName("weather_code")
+    val weatherCode: Int? = null,
 
-    @SerializedName("wind_speed_10m")
-    val windSpeed: Double?
+    @SerialName("wind_speed_10m")
+    val windSpeed: Double? = null
 )
 
+@Serializable
 data class HourlyWeatherDto(
     val time: List<String>,
 
-    @SerializedName("temperature_2m")
+    @SerialName("temperature_2m")
     val temperature: List<Double?>,
 
-    @SerializedName("apparent_temperature")
+    @SerialName("apparent_temperature")
     val feelsLike: List<Double?>,
 
-    @SerializedName("relative_humidity_2m")
+    @SerialName("relative_humidity_2m")
     val humidity: List<Int?>,
 
-    @SerializedName("precipitation_probability")
+    @SerialName("precipitation_probability")
     val precipitationProbability: List<Int?>,
 
     val precipitation: List<Double?>,
 
-    @SerializedName("weather_code")
+    @SerialName("weather_code")
     val weatherCode: List<Int?>,
 
-    @SerializedName("wind_speed_10m")
+    @SerialName("wind_speed_10m")
     val windSpeed: List<Double?>,
 
-    @SerializedName("wind_gusts_10m")
+    @SerialName("wind_gusts_10m")
     val windGusts: List<Double?>,
 
-    @SerializedName("uv_index")
+    @SerialName("uv_index")
     val uvIndex: List<Double?>,
 
-    @SerializedName("is_day")
+    @SerialName("is_day")
     val isDay: List<Int?>
 )
 
-data class DailyWeather(
+@Serializable
+data class DailyWeatherDto(
     val time: List<String>,
 
-    @SerializedName("temperature_2m_max")
+    @SerialName("temperature_2m_max")
     val maxTemperature: List<Double?>,
 
-    @SerializedName("temperature_2m_min")
+    @SerialName("temperature_2m_min")
     val minTemperature: List<Double?>,
 
-    @SerializedName("precipitation_probability_max")
+    @SerialName("precipitation_probability_max")
     val maxRainProbability: List<Int?>,
 
-    @SerializedName("weather_code")
+    @SerialName("weather_code")
     val weatherCode: List<Int?>,
 
     val sunrise: List<String?>,
     val sunset: List<String?>,
 
-    @SerializedName("uv_index_max")
+    @SerialName("uv_index_max")
     val maxUvIndex: List<Double?>
 )
