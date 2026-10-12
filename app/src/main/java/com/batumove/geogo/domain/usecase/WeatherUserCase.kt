@@ -2,6 +2,7 @@ package com.batumove.geogo.domain.usecase
 
 import com.batumove.geogo.data.mapper.toDomain
 import com.batumove.geogo.domain.model.Weather
+import com.batumove.geogo.domain.source.WeatherSource
 import javax.inject.Inject
 
 class WeatherUserCase @Inject constructor(private val weatherSource: WeatherSource) {
