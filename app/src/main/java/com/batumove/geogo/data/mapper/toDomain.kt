@@ -13,7 +13,7 @@ internal fun WeatherDto.toDomain(): Weather {
         feelsLike = current.feelsLike ?: 0.0,
         humidity = current.humidity ?: 0,
         precipitation = current.precipitation ?: 0.0,
-        weatherCode = current.weatherCode.toString(),
+        weatherCode = current.weatherCode?.toDomainWeatherCode() ?: "Unknown Weather",
         windSpeed = current.windSpeed ?: 0.0
     )
 }

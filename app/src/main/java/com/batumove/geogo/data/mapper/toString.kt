@@ -1,6 +1,6 @@
 package com.batumove.geogo.data.mapper
 
-internal fun Int.toString(): String =
+internal fun Int.toDomainWeatherCode(): String =
     when (this) {
         0 -> "Clear sky"
         1 -> "Mainly clear"
