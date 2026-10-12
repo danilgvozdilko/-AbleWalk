@@ -32,7 +32,7 @@ class HomeViewModel @Inject constructor(private val weatherUserCase: WeatherUser
                 val weather = weatherUserCase.getWeather()
                 _uiState.value = HomeUiState.Content(weather)
             } catch (e: Exception) {
-                _uiState.value = HomeUiState.Error
+                _uiState.value = HomeUiState.Error(e.message ?: "Unknown error")
             }
         }
     }

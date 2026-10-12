@@ -11,6 +11,6 @@ sealed interface HomeUiState {
         val weather: Weather,
     ) : HomeUiState
 
-    data object Error :
+    data class Error(val error: String) :
         HomeUiState
 }
