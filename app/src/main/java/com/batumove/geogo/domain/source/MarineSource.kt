@@ -1,4 +1,4 @@
-package com.batumove.geogo.data.remote.source
+package com.batumove.geogo.domain.source
 
 import com.batumove.geogo.data.dto.MarineDto
 

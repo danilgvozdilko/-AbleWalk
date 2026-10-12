@@ -1,7 +1,6 @@
 package com.batumove.geogo.domain.usecase
 
 import com.batumove.geogo.data.mapper.toDomain
-import com.batumove.geogo.data.remote.source.WeatherSource
 import com.batumove.geogo.domain.model.Weather
 import javax.inject.Inject
 
