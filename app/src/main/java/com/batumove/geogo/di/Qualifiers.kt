@@ -9,3 +9,7 @@ annotation class WeatherApi
 @Qualifier
 @Retention(AnnotationRetention.BINARY)
 annotation class AirQualityApi
+
+@Qualifier
+@Retention(AnnotationRetention.BINARY)
+annotation class MarineApi

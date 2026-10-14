@@ -17,6 +17,7 @@ import javax.inject.Singleton
 
 private const val WEATHER_BASE_URL = "https://api.open-meteo.com/"
 private const val AIR_QUALITY_BASE_URL = "https://air-quality-api.open-meteo.com/"
+private const val MARINE_BASE_URL = "https://marine-api.open-meteo.com/"
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -73,6 +74,23 @@ object NetworkModule {
             )
             .build()
 
+    @Provides
+    @Singleton
+    @com.batumove.geogo.di.MarineApi
+    fun provideMarineRetrofit(
+        json: Json,
+        client: OkHttpClient,
+    ): Retrofit =
+        Retrofit.Builder()
+            .baseUrl(MARINE_BASE_URL)
+            .client(client)
+            .addConverterFactory(
+                json.asConverterFactory(
+                    "application/json".toMediaType()
+                )
+            )
+            .build()
+
 
     @Provides
     @Singleton
@@ -83,7 +101,7 @@ object NetworkModule {
     @Provides
     @Singleton
     fun provideMarineApi(
-        @com.batumove.geogo.di.AirQualityApi retrofit: Retrofit
+        @com.batumove.geogo.di.MarineApi retrofit: Retrofit
     ): MarineApi = retrofit.create(MarineApi::class.java)
 
     @Provides
