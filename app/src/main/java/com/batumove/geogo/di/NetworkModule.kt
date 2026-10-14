@@ -15,6 +15,9 @@ import retrofit2.Retrofit
 import retrofit2.converter.kotlinx.serialization.asConverterFactory
 import javax.inject.Singleton
 
+private const val WEATHER_BASE_URL = "https://api.open-meteo.com/"
+private const val AIR_QUALITY_BASE_URL = "https://air-quality-api.open-meteo.com/"
+
 @Module
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
@@ -38,32 +41,55 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideRetrofit(
+    @com.batumove.geogo.di.WeatherApi
+    fun provideWeatherRetrofit(
         json: Json,
         client: OkHttpClient,
-    ): Retrofit = Retrofit.Builder().baseUrl("https://api.open-meteo.com/").client(client)
-        .addConverterFactory(
-            json.asConverterFactory(
-                "application/json".toMediaType()
+    ): Retrofit =
+        Retrofit.Builder()
+            .baseUrl(WEATHER_BASE_URL)
+            .client(client)
+            .addConverterFactory(
+                json.asConverterFactory(
+                    "application/json".toMediaType()
+                )
             )
-        ).build()
+            .build()
+
+    @Provides
+    @Singleton
+    @com.batumove.geogo.di.AirQualityApi
+    fun provideAirQualityRetrofit(
+        json: Json,
+        client: OkHttpClient,
+    ): Retrofit =
+        Retrofit.Builder()
+            .baseUrl(AIR_QUALITY_BASE_URL)
+            .client(client)
+            .addConverterFactory(
+                json.asConverterFactory(
+                    "application/json".toMediaType()
+                )
+            )
+            .build()
+
 
     @Provides
     @Singleton
     fun provideAirApi(
-        retrofit: Retrofit
+        @com.batumove.geogo.di.AirQualityApi retrofit: Retrofit
     ): AirQualityApi = retrofit.create(AirQualityApi::class.java)
 
     @Provides
     @Singleton
     fun provideMarineApi(
-        retrofit: Retrofit
+        @com.batumove.geogo.di.AirQualityApi retrofit: Retrofit
     ): MarineApi = retrofit.create(MarineApi::class.java)
 
     @Provides
     @Singleton
     fun provideWeatherApi(
-        retrofit: Retrofit
+        @com.batumove.geogo.di.WeatherApi retrofit: Retrofit
     ): WeatherApi = retrofit.create(WeatherApi::class.java)
 }
 
