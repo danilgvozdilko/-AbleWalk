@@ -7,8 +7,9 @@ import com.batumove.geogo.domain.model.AirQuality
 import com.batumove.geogo.domain.source.AirQualitySource
 import javax.inject.Inject
 
-class AirQualitySourceImpl @Inject constructor(private val airQualityApi: AirQualityApi) :
-    AirQualitySource {
+class AirQualitySourceImpl @Inject constructor(
+    private val airQualityApi: AirQualityApi
+) : AirQualitySource {
 
     override suspend fun getAirQuality(
         latitude: Double,
@@ -19,5 +20,4 @@ class AirQualitySourceImpl @Inject constructor(private val airQualityApi: AirQua
         }
 
     }
-
 }

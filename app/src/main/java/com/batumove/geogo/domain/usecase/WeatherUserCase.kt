@@ -7,5 +7,4 @@ import javax.inject.Inject
 class WeatherUserCase @Inject constructor(private val weatherSource: WeatherSource) {
     suspend fun getWeather(): Result<Weather> =
         weatherSource.getWeather(41.64, 41.63)
-
 }

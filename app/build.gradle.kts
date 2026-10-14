@@ -45,8 +45,6 @@ dependencies {
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
-    implementation(libs.androidx.lifecycle.runtime.compose)
-
     testImplementation(libs.junit)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
@@ -54,7 +52,6 @@ dependencies {
     androidTestImplementation(libs.androidx.junit)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
     debugImplementation(libs.androidx.compose.ui.tooling)
-
     implementation(libs.androidx.navigation.compose)
 
     // Compose
@@ -63,7 +60,6 @@ dependencies {
     // Hilt
     implementation(libs.hilt.android)
     implementation(libs.androidx.hilt.navigation.compose)
-
     ksp(libs.hilt.compiler)
 
     // Retrofit
@@ -73,6 +69,7 @@ dependencies {
     // OkHttp
     implementation(libs.okhttp)
     implementation(libs.okhttp.logging.interceptor)
+    implementation(libs.gson)
 
     // Serialization
     implementation(libs.kotlinx.serialization.json)
@@ -84,13 +81,11 @@ dependencies {
     // Room
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
-
     ksp(libs.androidx.room.compiler)
 
     // -------------------------
     // Unit tests
     // -------------------------
-
     testImplementation(libs.mockk)
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.turbine)
@@ -98,18 +93,13 @@ dependencies {
     // -------------------------
     // Instrumented / UI tests
     // -------------------------
-
     androidTestImplementation(libs.androidx.room.testing)
-
-    implementation(libs.androidx.datastore.preferences)
     implementation(libs.androidx.appcompat)
-
     implementation(libs.androidx.compose.material.icons.extended)
-
     implementation(libs.google.maps.compose)
-
     implementation(libs.google.play.services.location)
 
-    implementation("com.google.code.gson:gson:2.13.1")
-
+    implementation(libs.androidx.datastore.preferences)
+    implementation(libs.androidx.lifecycle.viewmodel.compose)
+    implementation(libs.androidx.lifecycle.runtime.compose)
 }

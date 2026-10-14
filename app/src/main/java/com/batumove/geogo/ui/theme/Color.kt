@@ -2,10 +2,18 @@ package com.batumove.geogo.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-val Purple80 = Color(0xFFD0BCFF)
-val PurpleGrey80 = Color(0xFFCCC2DC)
-val Pink80 = Color(0xFFEFB8C8)
+// Light theme
+val LightBackground = Color(0xFFF5F8FF)
+val LightSurface = Color(0xFFFFFFFF)
+val LightPrimary = Color(0xFF3488F6)
+val LightText = Color(0xFF172B4D)
+val LightSecondaryText = Color(0xFF71839F)
+val LightError = Color(0xFFE53935)
 
-val Purple40 = Color(0xFF6650a4)
-val PurpleGrey40 = Color(0xFF625b71)
-val Pink40 = Color(0xFF7D5260)
+// Dark theme
+val DarkBackground = Color(0xFF101827)
+val DarkSurface = Color(0xFF1B2739)
+val DarkPrimary = Color(0xFF74B2FF)
+val DarkText = Color(0xFFF1F5FF)
+val DarkSecondaryText = Color(0xFFA0AEC4)
+val DarkError = Color(0xFFFF7777)

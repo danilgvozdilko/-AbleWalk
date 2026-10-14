@@ -110,4 +110,3 @@ object NetworkModule {
         @com.batumove.geogo.di.WeatherApi retrofit: Retrofit
     ): WeatherApi = retrofit.create(WeatherApi::class.java)
 }
-
