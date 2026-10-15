@@ -1,6 +1,7 @@
 package com.batumove.geogo.presentation.settings
 
 import androidx.compose.runtime.Composable
+import com.batumove.geogo.ui.components.Background
 import com.batumove.geogo.ui.theme.ThemeMode
 
 @Composable
@@ -9,8 +10,10 @@ fun SettingsScreen(
     onThemeChange: (ThemeMode) -> Unit,
     onBackClick: () -> Boolean
 ) {
-    ThemeSelector(
-        selectedTheme = themeMode,
-        onThemeSelected = onThemeChange
-    )
+    Background {
+        ThemeSelector(
+            selectedTheme = themeMode,
+            onThemeSelected = onThemeChange
+        )
+    }
 }

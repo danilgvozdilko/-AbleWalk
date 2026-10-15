@@ -127,26 +127,3 @@ fun WeatherCard(data: Weather) {
         )
     }
 }
-
-
-@Preview(
-    name = "Light",
-    showBackground = true
-)
-@Composable
-fun WeatherLightPreview() {
-    GeoGOTheme(darkTheme = false) {
-        WeatherScreen()
-    }
-}
-
-@Preview(
-    name = "Dark",
-    showBackground = true
-)
-@Composable
-fun WeatherDarkPreview() {
-    GeoGOTheme(darkTheme = true) {
-        WeatherScreen()
-    }
-}

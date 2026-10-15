@@ -24,6 +24,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.batumove.geogo.ui.components.Background
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -50,48 +51,49 @@ fun ProfileScreen(
             )
         }
     ) { padding ->
-
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .padding(16.dp)
-        ) {
-
-            // Здесь будет информация пользователя
-
-            Spacer(
-                modifier = Modifier.height(24.dp)
-            )
-
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                onClick = onSettingsClick
+        Background {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+                    .padding(16.dp)
             ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically
+
+                // Здесь будет информация пользователя
+
+                Spacer(
+                    modifier = Modifier.height(24.dp)
+                )
+
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    onClick = onSettingsClick
                 ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
 
-                    Icon(
-                        imageVector = Icons.Default.Settings,
-                        contentDescription = null
-                    )
+                        Icon(
+                            imageVector = Icons.Default.Settings,
+                            contentDescription = null
+                        )
 
-                    Spacer(Modifier.width(16.dp))
+                        Spacer(Modifier.width(16.dp))
 
-                    Text(
-                        text = "Настройки",
-                        style = MaterialTheme.typography.bodyLarge,
-                        modifier = Modifier.weight(1f)
-                    )
+                        Text(
+                            text = "Настройки",
+                            style = MaterialTheme.typography.bodyLarge,
+                            modifier = Modifier.weight(1f)
+                        )
 
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                        contentDescription = null
-                    )
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                            contentDescription = null
+                        )
+                    }
                 }
             }
         }
