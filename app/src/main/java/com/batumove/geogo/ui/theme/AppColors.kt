@@ -21,7 +21,7 @@ val LightAppColors = AppColors(
     warning = Color(0xFFF5A623),
     weatherCard = Color.White,
     weatherIcon = Color(0xFF3488F6),
-    gradientStart = Color(0xFF9DD5FF),
+    gradientStart = Color(0xFFB8E0FD),
     gradientEnd = Color(0xFFF5F8FF)
 )
 

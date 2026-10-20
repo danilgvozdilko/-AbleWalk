@@ -1,3 +1,17 @@
 <resources>
     <string name="app_name">GeoGO</string>
+    <string name="manage">Manage</string>
+    <string name="cloud_sync_status">Cloud Sync %1$s</string>
+    <string name="active">Active</string>
+    <string name="inactive">Inactive</string>
+    <string name="unit_formatting">UNIT &amp; FORMATTING</string>
+    <string name="temperature">Temperature</string>
+    <string name="wind_speed">Wind Speed</string>
+    <string name="distance_elevation">Distance &amp; Elevation</string>
+    <string name="metric">Metric (km, m)</string>
+    <string name="appearance">Appearance</string>
+    <string name="notifications">Notifications</string>
+    <string name="push_notifications">Push Notifications</string>
+    <string name="push_notifications_description">Receive important updates and alerts</string>
+    <string name="settings">Settings</string>
 </resources>
