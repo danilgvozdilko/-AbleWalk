@@ -20,6 +20,7 @@ import com.batumove.geogo.domain.model.HourlyMarine
 import com.batumove.geogo.domain.model.HourlyWeather
 import com.batumove.geogo.domain.model.Marine
 import com.batumove.geogo.domain.model.Weather
+import com.batumove.geogo.domain.model.WeatherCode
 
 internal fun WeatherDto.toDomain(): Weather {
     return Weather(
@@ -52,7 +53,7 @@ internal fun HourlyWeatherDto.toDomain(): HourlyWeather {
         humidity = humidity,
         precipitationProbability = precipitationProbability,
         precipitation = precipitation,
-        weatherCode = weatherCode.map { it?.toDomainWeatherCode() ?: "Unknown Weather" },
+        weatherCode = weatherCode.map { it?.toDomainWeatherCode() ?: WeatherCode.UNKNOWN },
         windSpeed = windSpeed,
         windGusts = windGusts,
         uvIndex = uvIndex,
@@ -66,7 +67,7 @@ internal fun DailyWeatherDto.toDomain(): DailyWeather {
         maxTemperature,
         minTemperature,
         maxRainProbability,
-        weatherCode.map { it?.toDomainWeatherCode() ?: "Unknown Weather" },
+        weatherCode.map { it?.toDomainWeatherCode() ?: WeatherCode.UNKNOWN },
         sunrise,
         sunset,
         maxUvIndex

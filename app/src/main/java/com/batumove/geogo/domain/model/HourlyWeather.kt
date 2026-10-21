@@ -7,7 +7,7 @@ data class HourlyWeather(
     val humidity: List<Int?>,
     val precipitationProbability: List<Int?>,
     val precipitation: List<Double?>,
-    val weatherCode: List<String?>,
+    val weatherCode: List<WeatherCode?>,
     val windSpeed: List<Double?>,
     val windGusts: List<Double?>,
     val uvIndex: List<Double?>,

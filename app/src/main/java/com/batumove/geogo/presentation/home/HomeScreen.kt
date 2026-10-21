@@ -15,7 +15,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.batumove.geogo.navigation.ScreenRoutes
 import com.batumove.geogo.presentation.weather.WeatherScreen
-import com.batumove.geogo.ui.components.Background
+import com.batumove.geogo.ui.components.background.Background
 import com.batumove.geogo.ui.components.MainBottomBar
 import com.batumove.geogo.ui.components.MainTab
 import com.batumove.geogo.ui.components.MainTopBar
@@ -73,7 +73,6 @@ fun HomeScreen(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(innerPadding)
             ) {
                 NavHost(
                     navController = navController,
