@@ -12,14 +12,13 @@ import androidx.compose.ui.res.stringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.batumove.geogo.R
-import com.batumove.geogo.ui.components.Background
 import com.batumove.geogo.ui.components.SettingsTopBar
+import com.batumove.geogo.ui.components.background.Background
 import com.batumove.geogo.ui.components.cards.NameCard
 import com.batumove.geogo.ui.components.cards.NotificationSettingsCard
 import com.batumove.geogo.ui.components.cards.UnitFormattingCard
 import com.batumove.geogo.ui.components.text.TitleText
 import com.batumove.geogo.ui.theme.AbleMoveDimens
-import com.batumove.geogo.ui.components.background.Background
 import com.batumove.geogo.ui.theme.ThemeMode
 
 @Composable
@@ -76,3 +75,4 @@ fun SettingsScreen(
             }
         }
     }
+}
