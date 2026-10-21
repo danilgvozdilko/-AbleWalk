@@ -1,4 +1,4 @@
-package com.batumove.geogo.ui.components
+package com.batumove.geogo.ui.components.background
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box

@@ -3,6 +3,7 @@ package com.batumove.geogo.presentation.weather
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.batumove.geogo.domain.source.LocationRepository
 import com.batumove.geogo.domain.usecase.AirQualityUseCase
 import com.batumove.geogo.domain.usecase.MarineUseCase
 import com.batumove.geogo.domain.usecase.WeatherUserCase
@@ -18,10 +19,15 @@ import javax.inject.Inject
 class WeatherViewModel @Inject constructor(
     private val weatherUserCase: WeatherUserCase,
     private val airQualityUseCase: AirQualityUseCase,
-    private val marineUseCase: MarineUseCase
+    private val marineUseCase: MarineUseCase,
+    private val locationRepository: LocationRepository
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(WeatherUiState())
     val uiState = _uiState.asStateFlow()
+
+    private val _locationName = MutableStateFlow("")
+    val locationName = _locationName.asStateFlow()
+
 
     init {
         loadWeather()
@@ -36,6 +42,12 @@ class WeatherViewModel @Inject constructor(
             val result = weatherUserCase.getWeather()
 
             result.onSuccess { weather ->
+                _locationName.update {
+                    locationRepository.getLocationName(
+                        latitude = weather.latitude,
+                        longitude = weather.longitude,
+                    ).orEmpty()
+                }
                 _uiState.update {
                     it.copy(weather = UiState.Success(weather))
                 }

@@ -24,7 +24,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.batumove.geogo.ui.components.Background
+import com.batumove.geogo.ui.components.background.Background
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

@@ -12,8 +12,8 @@ android {
 
     defaultConfig {
         applicationId = "com.batumove.geogo"
-        minSdk = 36
-        targetSdk = 36
+        minSdk = 26
+        targetSdk = 37
         versionCode = 1
         versionName = "1.0"
 

@@ -1,5 +1,8 @@
 package com.batumove.geogo.di
 
+import android.content.Context
+import com.batumove.geogo.data.remote.source.LocationRepositoryImpl
+import com.batumove.geogo.domain.source.LocationRepository
 import com.batumove.geogo.data.datastore.NotificationPreferencesImpl
 import com.batumove.geogo.data.datastore.ThemePreferencesImpl
 import com.batumove.geogo.data.datastore.UnitFormattingPreferencesImpl
@@ -14,31 +17,22 @@ import com.batumove.geogo.domain.source.MarineSource
 import com.batumove.geogo.domain.source.WeatherSource
 import dagger.Binds
 import dagger.Module
+import dagger.Provides
 import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import jakarta.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
-abstract class RepositoryModule {
-
-    @Binds
-    abstract fun bindWeatherSource(
-        weatherSourceImpl: WeatherSourceImpl
-    ): WeatherSource
-
-    @Binds
-    abstract fun bindAirQualitySource(
-        airQualitySourceImpl: AirQualitySourceImpl
-    ): AirQualitySource
-
-    @Binds
-    abstract fun bindMarineSource(
-        marineSourceImpl: MarineSourceImpl
-    ): MarineSource
-
-    @Binds
+class RepositoryModule {
+    @Provides
     @Singleton
+    fun provideLocationRepository(
+        @ApplicationContext context: Context
+    ): LocationRepository {
+        return LocationRepositoryImpl(context)
+    }
     abstract fun bindThemePreferences(
         implementation: ThemePreferencesImpl
     ): ThemePreferences
