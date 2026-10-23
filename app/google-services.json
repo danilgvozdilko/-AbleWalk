@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "1064805473589",
+    "project_id": "ablemove-54902",
+    "storage_bucket": "ablemove-54902.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1064805473589:android:867d17f1d311db643e007c",
+        "android_client_info": {
+          "package_name": "com.geo.ablemove"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1064805473589-ekbb90nqemv1fthsdjp5knokt2q37gm3.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.geo.ablemove",
+            "certificate_hash": "bb1b6a0a58aaf0ae1bd28dfe47785818b798d5eb"
+          }
+        },
+        {
+          "client_id": "1064805473589-bgf944dv6chs3qneajpr27p61i62gm7v.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBwJuQvBPgrt_pW0jZkFe_VHAbguOUfLT4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1064805473589-bgf944dv6chs3qneajpr27p61i62gm7v.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
