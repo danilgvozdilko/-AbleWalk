@@ -9,6 +9,7 @@ import com.geo.ablemove.presentation.login.LoginRoute
 import com.geo.ablemove.presentation.profile.ProfileScreen
 import com.geo.ablemove.presentation.registration.RegistrationScreen
 import com.geo.ablemove.presentation.settings.SettingsScreen
+import com.geo.ablemove.presentation.splash.SplashRoute
 import com.geo.ablemove.ui.theme.ThemeMode
 
 @Composable
@@ -18,8 +19,23 @@ fun NavigationHost(
     onThemeChange: (ThemeMode) -> Unit
 ) {
 
-    NavHost(navController = navController, startDestination = ScreenRoutes.LoginRoute) {
+    NavHost(navController = navController, startDestination = ScreenRoutes.SplashRoute) {
         composable<ScreenRoutes.SplashRoute> {
+            SplashRoute(onNavigateToLogin = {
+                navController.navigate(ScreenRoutes.LoginRoute) {
+                    popUpTo(ScreenRoutes.SplashRoute) {
+                        inclusive = true
+                    }
+                    launchSingleTop = true
+                }
+            }, onNavigateToHome = {
+                navController.navigate(ScreenRoutes.HomeRoute) {
+                    popUpTo(ScreenRoutes.SplashRoute) {
+                        inclusive = true
+                    }
+                    launchSingleTop = true
+                }
+            })
 //            val splashViewModel: SplashViewModel = hiltViewModel()
 //            SplashScreen(
 //                viewModel = splashViewModel,

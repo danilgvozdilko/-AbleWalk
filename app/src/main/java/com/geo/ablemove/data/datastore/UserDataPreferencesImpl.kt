@@ -2,6 +2,7 @@ package com.geo.ablemove.data.datastore
 
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import com.geo.ablemove.domain.datastore.UserDataPreferences
@@ -18,6 +19,7 @@ class UserDataPreferencesImpl @Inject constructor(
 
     private companion object {
         val USER_DATA = stringPreferencesKey("user_data")
+        val IS_LOGINED = booleanPreferencesKey("is_logined")
     }
 
     private val json = Json {
@@ -46,6 +48,21 @@ class UserDataPreferencesImpl @Inject constructor(
     override suspend fun clearUserData() {
         dataStore.edit { preferences ->
             preferences.remove(USER_DATA)
+        }
+    }
+
+    override val isLogined: Flow<Boolean> =
+        dataStore.data.map { preferences ->
+            preferences[IS_LOGINED] ?: false
+        }
+
+    override suspend fun getIsLogined(): Boolean {
+        return isLogined.first()
+    }
+
+    override suspend fun setIsLogined(isLogined: Boolean) {
+        dataStore.edit { preferences ->
+            preferences[IS_LOGINED] = isLogined
         }
     }
 }

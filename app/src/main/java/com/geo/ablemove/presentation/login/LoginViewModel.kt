@@ -41,6 +41,7 @@ class LoginViewModel @Inject constructor(
 
             try {
                 val user = signInWithGoogleUseCase(idToken)
+                userDataPreferences.setIsLogined(true)
                 userDataPreferences.setUserData(user)
                 _uiState.value = LoginUiState.Success(user)
             } catch (e: CancellationException) {
