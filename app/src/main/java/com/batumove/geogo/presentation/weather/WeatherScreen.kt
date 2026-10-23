@@ -12,7 +12,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -21,6 +20,7 @@ import com.batumove.geogo.domain.model.CurrentWeather
 import com.batumove.geogo.domain.model.DailyWeather
 import com.batumove.geogo.domain.model.HourlyWeather
 import com.batumove.geogo.domain.model.Marine
+import com.batumove.geogo.domain.model.TemperatureUnit
 import com.batumove.geogo.domain.model.Weather
 import com.batumove.geogo.domain.model.WeatherCode
 import com.batumove.geogo.domain.model.isDay
@@ -34,11 +34,13 @@ fun WeatherScreen(
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val locationName by viewModel.locationName.collectAsStateWithLifecycle()
+    val unitFormatting by viewModel.unitFormatting.collectAsStateWithLifecycle()
 
     WeatherBackground(state.weather)
     Column(modifier = Modifier.fillMaxSize()) {
         WeatherBlock(
             locationName = locationName,
+            temperatureFormat = unitFormatting.temperature.format,
             state = state.weather,
             onRetry = viewModel::retryWeather
         )
@@ -75,6 +77,7 @@ fun WeatherBackground(state: UiState<Weather>) {
 @Composable
 fun WeatherBlock(
     locationName: String,
+    temperatureFormat: String,
     state: UiState<Weather>,
     onRetry: () -> Unit
 ) {
@@ -88,7 +91,7 @@ fun WeatherBlock(
         }
 
         is UiState.Success -> {
-            WeatherCard(locationName, state.data)
+            WeatherCard(locationName, temperatureFormat, state.data)
         }
     }
 }
@@ -136,18 +139,22 @@ fun MarineBlock(
 }
 
 @Composable
-fun WeatherCard(locationName: String, data: Weather) {
+fun WeatherCard(locationName: String, temperatureFormat: String, data: Weather) {
     Column(
         Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
             text = locationName,
-            style = MaterialTheme.typography.headlineLarge,
+            style = MaterialTheme.typography.labelLarge,
             color = MaterialTheme.colorScheme.onBackground
         )
         Text(
-            text = data.currentWeather.temperature.toString(),
+            text =
+                buildString {
+                    append(data.currentWeather.temperature?.toInt().toString())
+                    append(temperatureFormat)
+                },
             style = MaterialTheme.typography.headlineLarge,
             color = MaterialTheme.colorScheme.onBackground
         )
@@ -161,14 +168,15 @@ fun WeatherCard(locationName: String, data: Weather) {
 
 @Preview(
     name = "Light",
-    showBackground = true
+    showBackground = true,
+    backgroundColor = 0xFFFFFFFF
 )
 @Composable
 fun WeatherCardLightPreview() {
     GeoGOTheme(darkTheme = false) {
-        val context = LocalContext.current
         WeatherCard(
             "Batumi",
+            TemperatureUnit.FAHRENHEIT.format,
             Weather(
                 0.11,
                 0.11,
@@ -212,14 +220,15 @@ fun WeatherCardLightPreview() {
 
 @Preview(
     name = "Dark",
-    showBackground = true
+    showBackground = true,
+    backgroundColor = 0xFF000000
 )
 @Composable
 fun WeatherCardDarkPreview() {
-    val context = LocalContext.current
     GeoGOTheme(darkTheme = true) {
         WeatherCard(
             "Batumi",
+            TemperatureUnit.CELSIUS.format,
             Weather(
                 0.11,
                 0.11,

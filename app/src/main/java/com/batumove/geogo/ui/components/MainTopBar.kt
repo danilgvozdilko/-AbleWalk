@@ -17,9 +17,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.batumove.geogo.ui.theme.GeoGOTheme
 
 @Composable
 fun MainTopBar(
@@ -40,7 +38,7 @@ fun MainTopBar(
                 .clip(CircleShape)
                 .shadow(12.dp)
                 .background(
-                    MaterialTheme.colorScheme.surfaceVariant
+                    MaterialTheme.colorScheme.surface
                 )
         ) {
             Icon(
@@ -49,27 +47,5 @@ fun MainTopBar(
                 tint = MaterialTheme.colorScheme.primary
             )
         }
-    }
-}
-
-@Preview(
-    name = "Light",
-    showBackground = true
-)
-@Composable
-fun MainTopLightPreview() {
-    GeoGOTheme(darkTheme = false) {
-        MainTopBar(Modifier) {}
-    }
-}
-
-@Preview(
-    name = "Dark",
-    showBackground = true
-)
-@Composable
-fun MainTopDarkPreview() {
-    GeoGOTheme(darkTheme = true) {
-        MainTopBar(Modifier) {}
     }
 }

@@ -1,6 +1,6 @@
 package com.batumove.geogo.domain.model
 
-enum class TemperatureUnit {
-    CELSIUS,
-    FAHRENHEIT
+enum class TemperatureUnit(val format: String) {
+    CELSIUS("°C"),
+    FAHRENHEIT("°F")
 }

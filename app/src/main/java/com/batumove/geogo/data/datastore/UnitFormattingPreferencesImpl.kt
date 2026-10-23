@@ -17,7 +17,6 @@ class UnitFormattingPreferencesImpl @Inject constructor(
     private val dataStore: DataStore<Preferences>
 ) : UnitFormattingPreferences {
 
-
     private companion object {
         val TEMPERATURE_KEY = stringPreferencesKey("temperature_unit")
         val WIND_SPEED_KEY = stringPreferencesKey("wind_speed_unit")

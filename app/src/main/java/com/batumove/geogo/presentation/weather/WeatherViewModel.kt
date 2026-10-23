@@ -3,6 +3,8 @@ package com.batumove.geogo.presentation.weather
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.batumove.geogo.domain.datastore.UnitFormattingPreferences
+import com.batumove.geogo.domain.model.UnitFormatting
 import com.batumove.geogo.domain.source.LocationRepository
 import com.batumove.geogo.domain.usecase.AirQualityUseCase
 import com.batumove.geogo.domain.usecase.MarineUseCase
@@ -10,7 +12,10 @@ import com.batumove.geogo.domain.usecase.WeatherUserCase
 import com.batumove.geogo.presentation.home.UiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -20,7 +25,8 @@ class WeatherViewModel @Inject constructor(
     private val weatherUserCase: WeatherUserCase,
     private val airQualityUseCase: AirQualityUseCase,
     private val marineUseCase: MarineUseCase,
-    private val locationRepository: LocationRepository
+    private val locationRepository: LocationRepository,
+    private val unitFormattingPreferences: UnitFormattingPreferences
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(WeatherUiState())
     val uiState = _uiState.asStateFlow()
@@ -28,6 +34,12 @@ class WeatherViewModel @Inject constructor(
     private val _locationName = MutableStateFlow("")
     val locationName = _locationName.asStateFlow()
 
+    val unitFormatting: StateFlow<UnitFormatting> =
+        unitFormattingPreferences.unitFormatting.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5_000),
+            initialValue = UnitFormatting()
+        )
 
     init {
         loadWeather()

@@ -7,12 +7,8 @@ import com.batumove.geogo.domain.model.WindSpeedUnit
 import kotlinx.coroutines.flow.Flow
 
 interface UnitFormattingPreferences {
-
     val unitFormatting: Flow<UnitFormatting>
-
     suspend fun setTemperatureUnit(unit: TemperatureUnit)
-
     suspend fun setWindSpeedUnit(unit: WindSpeedUnit)
-
     suspend fun setDistanceUnit(unit: DistanceUnit)
 }
