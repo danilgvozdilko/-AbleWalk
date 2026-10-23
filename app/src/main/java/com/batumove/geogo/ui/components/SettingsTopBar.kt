@@ -3,9 +3,7 @@ package com.batumove.geogo.ui.components
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -22,7 +20,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.batumove.geogo.R
 
@@ -31,27 +28,20 @@ fun SettingsTopBar(
     onBackClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val colorScheme = MaterialTheme.colorScheme
-
-    Row(
+    Box(
         modifier = modifier
             .fillMaxWidth()
             .background(Color.Transparent)
-            .padding(
-                horizontal = 24.dp,
-                vertical = 16.dp
-            ),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(14.dp)
+            .padding(horizontal = 16.dp, vertical = 12.dp)
     ) {
         Box(
             modifier = Modifier
+                .align(Alignment.CenterStart)
                 .size(44.dp)
                 .clip(CircleShape)
-                .background(colorScheme.surface)
                 .border(
                     width = 1.dp,
-                    color = colorScheme.outlineVariant,
+                    color = MaterialTheme.colorScheme.outlineVariant,
                     shape = CircleShape
                 )
                 .clickable(onClick = onBackClick),
@@ -60,18 +50,17 @@ fun SettingsTopBar(
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                 contentDescription = "Back",
-                tint = colorScheme.primary,
+                tint = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.size(24.dp)
             )
         }
 
         Text(
             text = stringResource(R.string.settings),
-            color = colorScheme.onBackground,
+            color = MaterialTheme.colorScheme.onBackground,
             style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Bold,
-            modifier = Modifier.fillMaxWidth(),
-            textAlign = TextAlign.Center
+            modifier = Modifier.align(Alignment.Center)
         )
     }
 }

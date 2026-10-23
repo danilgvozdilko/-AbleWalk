@@ -28,22 +28,17 @@ fun SettingsScreen(
     onBackClick: () -> Boolean,
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
-
     val notificationsEnabled by viewModel.notificationsEnabled
         .collectAsStateWithLifecycle()
-
-
     val formatting by viewModel.unitFormatting
         .collectAsStateWithLifecycle()
 
-    Scaffold(
-        topBar = {
-            SettingsTopBar({ onBackClick.invoke() }, modifier = Modifier)
-        },
-    ) { innerPadding ->
-
-
-        Background {
+    Background {
+        Scaffold(
+            topBar = {
+                SettingsTopBar({ onBackClick.invoke() }, modifier = Modifier)
+            },
+        ) { innerPadding ->
             Column(
                 Modifier
                     .padding(innerPadding)

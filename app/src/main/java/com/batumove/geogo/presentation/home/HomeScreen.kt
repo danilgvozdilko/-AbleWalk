@@ -2,7 +2,6 @@ package com.batumove.geogo.presentation.home
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -15,10 +14,10 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.batumove.geogo.navigation.ScreenRoutes
 import com.batumove.geogo.presentation.weather.WeatherScreen
-import com.batumove.geogo.ui.components.background.Background
 import com.batumove.geogo.ui.components.MainBottomBar
 import com.batumove.geogo.ui.components.MainTab
 import com.batumove.geogo.ui.components.MainTopBar
+import com.batumove.geogo.ui.components.background.Background
 
 @Composable
 fun HomeScreen(
@@ -39,37 +38,37 @@ fun HomeScreen(
         else -> MainTab.WEATHER
     }
 
-    Scaffold(
-        topBar = {
-            MainTopBar(
-                onProfileClick = onProfileClick
-            )
-        },
+    Background {
+        Scaffold(
+            topBar = {
+                MainTopBar(
+                    onProfileClick = onProfileClick
+                )
+            },
 
-        bottomBar = {
-            MainBottomBar(
-                selectedTab = selectedTab,
-                onTabSelected = { tab ->
+            bottomBar = {
+                MainBottomBar(
+                    selectedTab = selectedTab,
+                    onTabSelected = { tab ->
 
-                    val route = when (tab) {
-                        MainTab.WEATHER -> ScreenRoutes.WeatherRoute
-                        MainTab.MAP -> ScreenRoutes.MapRoute
-                        MainTab.ACTIVITIES -> ScreenRoutes.ActivitiesRoute
-                    }
-
-                    navController.navigate(route) {
-                        popUpTo(navController.graph.findStartDestination().id) {
-                            saveState = true
+                        val route = when (tab) {
+                            MainTab.WEATHER -> ScreenRoutes.WeatherRoute
+                            MainTab.MAP -> ScreenRoutes.MapRoute
+                            MainTab.ACTIVITIES -> ScreenRoutes.ActivitiesRoute
                         }
 
-                        launchSingleTop = true
-                        restoreState = true
+                        navController.navigate(route) {
+                            popUpTo(navController.graph.findStartDestination().id) {
+                                saveState = true
+                            }
+
+                            launchSingleTop = true
+                            restoreState = true
+                        }
                     }
-                }
-            )
-        }
-    ) { innerPadding ->
-        Background {
+                )
+            }
+        ) { innerPadding ->
             Box(
                 modifier = Modifier
                     .fillMaxSize()
