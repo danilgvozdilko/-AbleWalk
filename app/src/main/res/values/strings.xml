@@ -1,6 +1,6 @@
 <resources>
     <string name="app_name">GeoGO</string>
-    <string name="manage">Manage</string>
+    <string name="edit">Edit</string>
     <string name="cloud_sync_status">Cloud Sync %1$s</string>
     <string name="active">Active</string>
     <string name="inactive">Inactive</string>
@@ -14,4 +14,72 @@
     <string name="push_notifications">Push Notifications</string>
     <string name="push_notifications_description">Receive important updates and alerts</string>
     <string name="settings">Settings</string>
+
+
+    <!-- Login header -->
+    <string name="login_title">Your world, perfectly\ntimed.</string>
+    <string name="login_description">Discover the best weather for everything\nyou love doing outdoors.</string>
+    <string name="login_app_logo">App logo</string>
+
+    <!-- Login form -->
+    <string name="login_welcome_back">Welcome back</string>
+    <string name="login_subtitle">Sign in to continue your adventures</string>
+    <string name="login_email_label">Email address</string>
+    <string name="login_email_placeholder">Enter your email</string>
+    <string name="login_password_label">Password</string>
+    <string name="login_password_placeholder">Enter your password</string>
+    <string name="login_forgot_password">Forgot password?</string>
+    <string name="login_password_visibility">Toggle password visibility</string>
+    <string name="login_sign_in">Sign In</string>
+
+    <!-- Social login -->
+    <string name="login_or_continue_with">OR CONTINUE WITH</string>
+    <string name="login_google">Continue with Google</string>
+    <string name="login_facebook">Continue with Facebook</string>
+
+    <!-- Registration and guest -->
+    <string name="login_no_account">Don\'t have an account?</string>
+    <string name="login_sign_up">Sign Up</string>
+    <string name="login_explore_guest">Explore as Guest</string>
+
+
+    <!-- Registration -->
+    <string name="registration_app_logo">App logo</string>
+
+    <string name="registration_title">Join Us Today!</string>
+    <string name="registration_description">Create your account and get started on your journey.</string>
+
+    <string name="registration_welcome">Create Account</string>
+    <string name="registration_subtitle">Enter your details to get started</string>
+
+    <!-- Email -->
+    <string name="registration_email_label">Email Address</string>
+    <string name="registration_email_placeholder">Enter your email</string>
+
+    <!-- Password -->
+    <string name="registration_password_label">Password</string>
+    <string name="registration_password_placeholder">Create a password</string>
+    <string name="registration_password_visibility">Show or hide password</string>
+
+    <!-- Confirm Password -->
+    <string name="registration_confirm_password_label">Confirm Password</string>
+    <string name="registration_confirm_password_placeholder">Re-enter your password</string>
+
+    <!-- Main action -->
+    <string name="registration_sign_up">Create Account</string>
+
+    <!-- Social registration -->
+    <string name="registration_or_continue_with">or sign up with</string>
+    <string name="registration_google">Continue with Google</string>
+    <string name="registration_facebook">Continue with Facebook</string>
+
+    <!-- Bottom navigation -->
+    <string name="registration_have_account">Already have an account?</string>
+    <string name="registration_sign_in">Sign In</string>
+    <string name="registration_explore_guest">Explore as Guest</string>
+
+    <string name="google_web_client_id">
+1064805473589-bgf944dv6chs3qneajpr27p61i62gm7v.apps.googleusercontent.com
+    </string>
+
 </resources>
