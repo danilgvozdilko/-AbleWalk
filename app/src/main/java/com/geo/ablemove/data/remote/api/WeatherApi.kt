@@ -14,7 +14,8 @@ interface WeatherApi {
         @Query("hourly") hourly: String = HOURLY,
         @Query("daily") daily: String = DAILY,
         @Query("forecast_days") days: Int = 7,
-        @Query("timezone") timezone: String = "auto"
+        @Query("timezone") timezone: String = "auto",
+        @Query("temperature_unit") temperatureUnit: String = "celsius"
     ): WeatherDto
 
     companion object {
