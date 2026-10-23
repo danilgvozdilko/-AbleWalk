@@ -36,7 +36,7 @@ private val DarkColorScheme = darkColorScheme(
 @Composable
 fun GeoGOTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    dynamicColor: Boolean = true,
+    dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
     val appColors = if (darkTheme) {
