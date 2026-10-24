@@ -6,7 +6,7 @@
     <string name="inactive">Inactive</string>
     <string name="unit_formatting">UNIT &amp; FORMATTING</string>
     <string name="temperature">Temperature</string>
-    <string name="wind_speed">Wind Speed</string>
+    <string name="wind_speed">"Wind speed "</string>
     <string name="distance_elevation">Distance &amp; Elevation</string>
     <string name="metric">Metric (km, m)</string>
     <string name="appearance">Appearance</string>
@@ -81,5 +81,12 @@
     <string name="google_web_client_id">
 1064805473589-bgf944dv6chs3qneajpr27p61i62gm7v.apps.googleusercontent.com
     </string>
+    <string name="degrees">°</string>
+    <string name="feels_like">"Feels like "</string>
+    <string name="max">"Max: "</string>
+    <string name="min">"Min: "</string>
+    <string name="humidity">"Humidity "</string>
+    <string name="percent_symbol">%</string>
+    <string name="hourly_forecast">HOURLY FORECAST</string>
 
 </resources>

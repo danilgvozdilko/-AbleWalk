@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.geo.ablemove.domain.datastore.UnitFormattingPreferences
 import com.geo.ablemove.domain.model.TemperatureUnit
 import com.geo.ablemove.domain.model.UnitFormatting
+import com.geo.ablemove.domain.model.filterNext24Hours
 import com.geo.ablemove.domain.source.LocationRepository
 import com.geo.ablemove.domain.usecase.AirQualityUseCase
 import com.geo.ablemove.domain.usecase.MarineUseCase
@@ -48,7 +49,6 @@ class WeatherViewModel @Inject constructor(
     private val _locationName = MutableStateFlow("")
     val locationName = _locationName.asStateFlow()
 
-
     init {
         observeTemperatureUnit()
         loadAirQuality()
@@ -83,10 +83,14 @@ class WeatherViewModel @Inject constructor(
                 longitude = weather.longitude
             ).orEmpty()
 
+            val parsedWeather = weather.copy(
+                hourlyWeather = weather.hourlyWeather.filterNext24Hours()
+            )
+
             _locationName.value = locationName
 
             _uiState.update {
-                it.copy(weather = UiState.Success(weather))
+                it.copy(weather = UiState.Success(parsedWeather))
             }
 
             Log.v("123123", "Success: $weather")

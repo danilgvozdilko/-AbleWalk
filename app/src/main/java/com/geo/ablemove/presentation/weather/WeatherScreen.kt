@@ -1,61 +1,78 @@
 package com.geo.ablemove.presentation.weather
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.LocationOn
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.geo.ablemove.domain.model.AirQuality
-import com.geo.ablemove.domain.model.CurrentWeather
-import com.geo.ablemove.domain.model.DailyWeather
-import com.geo.ablemove.domain.model.HourlyWeather
 import com.geo.ablemove.domain.model.Marine
+import com.geo.ablemove.domain.model.UnitFormatting
 import com.geo.ablemove.domain.model.Weather
 import com.geo.ablemove.domain.model.WeatherCode
-import com.geo.ablemove.domain.model.isDay
 import com.geo.ablemove.presentation.home.UiState
+import com.geo.ablemove.presentation.weather.components.weather.WeatherCard
+import com.geo.ablemove.presentation.weather.components.weather.WeatherCardShimmer
 import com.geo.ablemove.ui.components.background.WeatherBackground
-import com.geo.ablemove.ui.theme.GeoGOTheme
+import com.geo.ablemove.ui.components.shimmer.ShimmerPlaceholder
+import com.geo.ablemove.ui.components.shimmer.ShimmerProvider
+import com.geo.ablemove.ui.theme.WeatherTheme
 
 @Composable
 fun WeatherScreen(
-    viewModel: WeatherViewModel = hiltViewModel()
+    viewModel: WeatherViewModel = hiltViewModel(),
+    bottomPadding: Dp
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val locationName by viewModel.locationName.collectAsStateWithLifecycle()
     val unitFormatting by viewModel.unitFormatting.collectAsStateWithLifecycle()
 
-    WeatherBackground(state.weather)
-    Column(modifier = Modifier.fillMaxSize()) {
-        WeatherBlock(
-            locationName = locationName,
-            temperatureFormat = unitFormatting.temperature.format,
-            state = state.weather,
-            onRetry = viewModel::retryWeather
-        )
-        AirQualityBlock(
-            state = state.airQuality,
-            onRetry = viewModel::retryAirQuality
-        )
-        MarineBlock(
-            state = state.marine,
-            onRetry = viewModel::retryMarine
-        )
+    ShimmerProvider(theme = WeatherTheme.shimmerTheme) {
+        WeatherBackgroundBlock(state.weather)
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(
+                    start = 16.dp,
+                    end = 16.dp,
+                    top = 16.dp,
+                    bottom = bottomPadding + 8.dp
+                ),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            WeatherBlock(
+                locationName = locationName,
+                unitFormatting = unitFormatting,
+                state = state.weather,
+                onRetry = viewModel::retryWeather
+            )
+            AirQualityBlock(
+                state = state.airQuality,
+                onRetry = viewModel::retryAirQuality
+            )
+            MarineBlock(
+                state = state.marine,
+                onRetry = viewModel::retryMarine
+            )
+        }
     }
 }
 
 @Composable
-fun WeatherBackground(state: UiState<Weather>) {
+fun WeatherBackgroundBlock(state: UiState<Weather>) {
     when (state) {
         is UiState.Error, UiState.Loading -> {
             WeatherBackground(
@@ -67,7 +84,7 @@ fun WeatherBackground(state: UiState<Weather>) {
         is UiState.Success -> {
             WeatherBackground(
                 weatherCode = state.data.currentWeather.weatherCode ?: WeatherCode.UNKNOWN,
-                isDay = state.data.currentWeather.isDay()
+                isDay = state.data.hourlyWeather.isDay.first() == 1
             )
         }
     }
@@ -76,7 +93,7 @@ fun WeatherBackground(state: UiState<Weather>) {
 @Composable
 fun WeatherBlock(
     locationName: String,
-    temperatureFormat: String,
+    unitFormatting: UnitFormatting,
     state: UiState<Weather>,
     onRetry: () -> Unit
 ) {
@@ -86,11 +103,11 @@ fun WeatherBlock(
         }
 
         UiState.Loading -> {
-
+            WeatherCardShimmer()
         }
 
         is UiState.Success -> {
-            WeatherCard(locationName, temperatureFormat, state.data)
+            WeatherCard(locationName, unitFormatting, state.data)
         }
     }
 }
@@ -102,7 +119,11 @@ fun AirQualityBlock(
 ) {
     when (state) {
         is UiState.Error -> {
-
+            ShimmerPlaceholder(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .aspectRatio(4f / 2f)
+            )
         }
 
         UiState.Loading -> {
@@ -113,7 +134,6 @@ fun AirQualityBlock(
 
         }
     }
-
 }
 
 @Composable
@@ -123,7 +143,11 @@ fun MarineBlock(
 ) {
     when (state) {
         is UiState.Error -> {
-
+            ShimmerPlaceholder(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .aspectRatio(4f / 2f)
+            )
         }
 
         UiState.Loading -> {
@@ -133,138 +157,5 @@ fun MarineBlock(
         is UiState.Success -> {
 
         }
-    }
-
-}
-
-@Composable
-fun WeatherCard(locationName: String, temperatureFormat: String, data: Weather) {
-    Column(
-        Modifier.fillMaxWidth(),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text(
-            text = locationName,
-            style = MaterialTheme.typography.labelLarge,
-            color = MaterialTheme.colorScheme.onBackground
-        )
-        Text(
-            text =
-                buildString {
-                    append(data.currentWeather.temperature?.toInt().toString())
-                    append(temperatureFormat)
-                },
-            style = MaterialTheme.typography.headlineLarge,
-            color = MaterialTheme.colorScheme.onBackground
-        )
-        Icon(
-            imageVector = Icons.Outlined.LocationOn,
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.onSurface
-        )
-    }
-}
-
-@Preview(
-    name = "Light",
-    showBackground = true,
-    backgroundColor = 0xFFFFFFFF
-)
-@Composable
-fun WeatherCardLightPreview() {
-    GeoGOTheme(darkTheme = false) {
-        WeatherCard(
-            "Batumi",
-            TemperatureUnit.FAHRENHEIT.format,
-            Weather(
-                0.11,
-                0.11,
-                "Europe/Berlin",
-                CurrentWeather(
-                    "",
-                    23.01,
-                    12.00,
-                    1,
-                    12.1,
-                    WeatherCode.CLEAR_SKY,
-                    windSpeed = 1.0
-                ),
-                HourlyWeather(
-                    listOf(),
-                    listOf(),
-                    listOf(),
-                    listOf(),
-                    listOf(),
-                    listOf(),
-                    listOf(),
-                    listOf(),
-                    listOf(),
-                    listOf(),
-                    listOf(1, 1, 1, 0, 0, 0)
-                ),
-                DailyWeather(
-                    listOf(),
-                    listOf(),
-                    listOf(),
-                    listOf(),
-                    listOf(),
-                    listOf(),
-                    listOf(),
-                    listOf()
-                )
-            )
-        )
-    }
-}
-
-@Preview(
-    name = "Dark",
-    showBackground = true,
-    backgroundColor = 0xFF000000
-)
-@Composable
-fun WeatherCardDarkPreview() {
-    GeoGOTheme(darkTheme = true) {
-        WeatherCard(
-            "Batumi",
-            TemperatureUnit.CELSIUS.format,
-            Weather(
-                0.11,
-                0.11,
-                "Europe/Berlin",
-                CurrentWeather(
-                    "",
-                    23.01,
-                    12.00,
-                    1,
-                    12.1,
-                    WeatherCode.CLEAR_SKY,
-                    windSpeed = 1.0
-                ),
-                HourlyWeather(
-                    listOf(),
-                    listOf(),
-                    listOf(),
-                    listOf(),
-                    listOf(),
-                    listOf(),
-                    listOf(),
-                    listOf(),
-                    listOf(),
-                    listOf(),
-                    listOf(0, 1, 1, 0, 0, 0)
-                ),
-                DailyWeather(
-                    listOf(),
-                    listOf(),
-                    listOf(),
-                    listOf(),
-                    listOf(),
-                    listOf(),
-                    listOf(),
-                    listOf()
-                )
-            )
-        )
     }
 }

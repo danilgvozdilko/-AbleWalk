@@ -10,6 +10,7 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.platform.LocalContext
+import com.geo.ablemove.ui.components.shimmer.ShimmerThemes
 
 private val LightColorScheme = lightColorScheme(
     primary = LightPrimary,
@@ -19,7 +20,8 @@ private val LightColorScheme = lightColorScheme(
     onSurface = LightText,
     onSurfaceVariant = LightSecondaryText,
     error = LightError,
-    outlineVariant = LightOutlineVariant
+    outlineVariant = LightOutlineVariant,
+    surfaceBright = LightBackground
 )
 
 private val DarkColorScheme = darkColorScheme(
@@ -30,7 +32,8 @@ private val DarkColorScheme = darkColorScheme(
     onSurface = DarkText,
     onSurfaceVariant = DarkSecondaryText,
     error = DarkError,
-    outlineVariant = DarkOutlineVariant
+    outlineVariant = DarkOutlineVariant,
+    surfaceBright = LightBackground
 )
 
 @Composable
@@ -43,6 +46,12 @@ fun GeoGOTheme(
         DarkAppColors
     } else {
         LightAppColors
+    }
+
+    val shimmerTheme = if (darkTheme) {
+        ShimmerThemes.SpatialSilverDark
+    } else {
+        ShimmerThemes.SpatialSilverLight
     }
 
     val colorScheme = when {
@@ -60,7 +69,8 @@ fun GeoGOTheme(
     }
 
     CompositionLocalProvider(
-        LocalAppColors provides appColors
+        LocalAppColors provides appColors,
+        LocalShimmerTheme provides shimmerTheme
     ) {
         MaterialTheme(
             colorScheme = colorScheme,

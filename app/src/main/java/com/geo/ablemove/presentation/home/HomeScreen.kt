@@ -78,7 +78,9 @@ fun HomeScreen(
                     startDestination = ScreenRoutes.WeatherRoute
                 ) {
                     composable<ScreenRoutes.WeatherRoute> {
-                        WeatherScreen()
+                        WeatherScreen(
+                            bottomPadding = innerPadding.calculateBottomPadding()
+                        )
                     }
 
                     composable<ScreenRoutes.ActivitiesRoute> {

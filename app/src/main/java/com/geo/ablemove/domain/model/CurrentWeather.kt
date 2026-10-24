@@ -1,7 +1,5 @@
 package com.geo.ablemove.domain.model
 
-import java.time.LocalDateTime
-
 data class CurrentWeather(
     val time: String,
     val temperature: Double?,
@@ -11,8 +9,3 @@ data class CurrentWeather(
     val weatherCode: WeatherCode?,
     val windSpeed: Double?
 )
-
-internal fun CurrentWeather.isDay(): Boolean {
-    val hour = LocalDateTime.parse(time).hour
-    return hour in 6 until 18
-}

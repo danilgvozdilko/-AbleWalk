@@ -1,6 +1,8 @@
 package com.geo.ablemove.domain.model
 
+import androidx.annotation.DrawableRes
 import androidx.compose.ui.graphics.Color
+import com.geo.ablemove.R
 
 internal enum class WeatherVisualType {
     CLEAR,
@@ -15,6 +17,28 @@ internal enum class WeatherVisualType {
     HEAVY_SNOW,
     THUNDERSTORM,
 }
+
+@DrawableRes
+internal fun WeatherVisualType.toIconRes(): Int =
+    when (this) {
+        WeatherVisualType.CLEAR -> R.drawable.ic_weather_clear
+
+        WeatherVisualType.PARTLY_CLOUDY -> R.drawable.ic_weather_partly_cloudy
+
+        WeatherVisualType.FOG -> R.drawable.ic_weather_fog
+
+        WeatherVisualType.RAIN,
+        WeatherVisualType.DRIZZLE,
+        WeatherVisualType.HEAVY_RAIN -> R.drawable.ic_weather_rain
+
+        WeatherVisualType.SNOW,
+        WeatherVisualType.HEAVY_SNOW -> R.drawable.ic_weather_snow
+
+        WeatherVisualType.THUNDERSTORM -> R.drawable.ic_weather_thunderstorm
+
+        WeatherVisualType.CLOUDY,
+        WeatherVisualType.OVERCAST -> R.drawable.ic_weather_cloudy
+    }
 
 internal data class WeatherGradient(
     val colors: List<Color>,
