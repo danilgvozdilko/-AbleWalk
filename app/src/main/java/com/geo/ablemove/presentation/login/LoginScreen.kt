@@ -1,7 +1,8 @@
 package com.geo.ablemove.presentation.login
 
-import android.app.Activity
 import android.util.Log
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -44,7 +45,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -59,6 +59,8 @@ import androidx.credentials.exceptions.GetCredentialCancellationException
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.geo.ablemove.R
+import com.geo.ablemove.data.helpers.FacebookSignInCancelledException
+import com.geo.ablemove.data.helpers.FacebookSignInManager
 import com.geo.ablemove.data.helpers.GoogleSignInManager
 import com.geo.ablemove.ui.components.background.Background
 import com.geo.ablemove.ui.components.buttons.SocialLoginButton
@@ -72,8 +74,8 @@ fun LoginRoute(
     onLoginSuccess: () -> Unit,
     viewModel: LoginViewModel = hiltViewModel()
 ) {
-    val context = LocalContext.current
-    val activity = context as Activity
+
+    val activity = LocalActivity.current as ComponentActivity
     val scope = rememberCoroutineScope()
 
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -84,10 +86,15 @@ fun LoginRoute(
         GoogleSignInManager()
     }
 
+    val facebookSignInManager = remember {
+        FacebookSignInManager()
+    }
+
     LaunchedEffect(uiState) {
+        Log.d("FacebookAuth", "UI State: $uiState")
+
         if (uiState is LoginUiState.Success) {
-            val user = uiState as LoginUiState.Success
-            Log.v("123123", "user = ${user.user}")
+            Log.d("FacebookAuth", "Navigating after successful login")
             onLoginSuccess()
         }
     }
@@ -113,6 +120,38 @@ fun LoginRoute(
                     } catch (e: Exception) {
                         viewModel.onGoogleSignInError(
                             e.localizedMessage ?: "Google Sign-In failed"
+                        )
+                    }
+                }
+            }
+        }, onFacebookClick = {
+            Log.d("FacebookAuth", "Facebook button clicked")
+
+            if (uiState !is LoginUiState.Loading) {
+                viewModel.onFacebookSignInStarted()
+
+                scope.launch {
+                    try {
+                        Log.d("FacebookAuth", "Starting Facebook SDK")
+
+                        val accessToken = facebookSignInManager.signIn(activity)
+
+                        Log.d("FacebookAuth", "Facebook token received")
+
+                        viewModel.signInWithFacebook(accessToken)
+
+                    } catch (e: FacebookSignInCancelledException) {
+                        Log.d("FacebookAuth", "Login cancelled")
+                        viewModel.onFacebookSignInCancelled()
+
+                    } catch (e: CancellationException) {
+                        viewModel.onFacebookSignInCancelled()
+                        throw e
+
+                    } catch (e: Exception) {
+                        Log.e("FacebookAuth", "Login failed", e)
+                        viewModel.onFacebookSignInError(
+                            e.localizedMessage ?: "Facebook sign-in failed"
                         )
                     }
                 }

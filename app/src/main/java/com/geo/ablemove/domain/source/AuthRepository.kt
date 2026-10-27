@@ -4,4 +4,6 @@ import com.geo.ablemove.domain.model.AuthUser
 
 interface AuthRepository {
     suspend fun signInWithGoogle(idToken: String): AuthUser
+    suspend fun signInWithFacebook(accessToken: String): AuthUser
+
 }
