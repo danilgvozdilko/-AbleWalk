@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -23,9 +24,11 @@ import com.geo.ablemove.data.mapper.toVisualType
 import com.geo.ablemove.domain.model.HourlyWeather
 import com.geo.ablemove.domain.model.toIconRes
 import com.geo.ablemove.ui.components.cards.DefaultCard
+import com.geo.ablemove.ui.components.lazyRowFadingEdge
 
 @Composable
 fun HourlyWeatherCard(data: HourlyWeather) {
+    val listState = rememberLazyListState()
     DefaultCard(Modifier.fillMaxWidth()) {
         Column(
             Modifier
@@ -40,7 +43,12 @@ fun HourlyWeatherCard(data: HourlyWeather) {
             Spacer(Modifier.height(8.dp))
             LazyRow(
                 Modifier
-                    .fillMaxWidth(),
+                    .fillMaxWidth()
+                    .lazyRowFadingEdge(
+                        state = listState,
+                        edgeWidth = 32.dp
+                    ),
+                state = listState,
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
