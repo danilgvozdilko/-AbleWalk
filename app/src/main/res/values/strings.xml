@@ -88,5 +88,23 @@
     <string name="humidity">"Humidity "</string>
     <string name="percent_symbol">%</string>
     <string name="hourly_forecast">HOURLY FORECAST</string>
+    <string name="air_quality">AIR QUALITY</string>
+    <string name="unknown">Unknown</string>
+    <string name="good">Good</string>
+    <string name="fair">Fair</string>
+    <string name="moderate">Moderate</string>
+    <string name="poor">Poor</string>
+    <string name="very_poor">Very Poor</string>
+    <string name="extremely_poor">Extremely Poor</string>
+    <string name="aqi">AQI</string>
+    <string name="calm">Calm</string>
+    <string name="slight">Slight</string>
+    <string name="rough">Rough</string>
+    <string name="very_rough">Very Rough</string>
+    <string name="sea_conditions">SEA CONDITIONS</string>
+    <string name="wave_height">WAVE HEIGHT</string>
+    <string name="direction">DIRECTION</string>
+    <string name="sea_surface_temperature">Sea surface temperature</string>
+    <string name="error_message">Something went wrong\n\nWe couldn’t load the data. Please try again.</string>
 
 </resources>

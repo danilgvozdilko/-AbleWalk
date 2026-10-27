@@ -8,10 +8,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Accessibility
-import androidx.compose.material.icons.filled.Map
-import androidx.compose.material.icons.filled.WbSunny
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -22,28 +18,29 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.geo.ablemove.R
 import com.geo.ablemove.ui.theme.GeoGOTheme
 
 enum class MainTab(
     val title: String,
-    val icon: ImageVector
+    val icon: Int
 ) {
     WEATHER(
         title = "Weather",
-        icon = Icons.Default.WbSunny
+        icon = R.drawable.ic_weather
     ),
 
     ACTIVITIES(
         title = "Activities",
-        icon = Icons.Default.Accessibility
+        icon = R.drawable.ic_activities
     ),
 
     MAP(
         title = "Explore",
-        icon = Icons.Default.Map
+        icon = R.drawable.ic_explore
     ),
 }
 
@@ -116,7 +113,7 @@ private fun MainBottomBarItem(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
-                imageVector = tab.icon,
+                painter = painterResource(id = tab.icon),
                 contentDescription = null,
                 tint = contentColor,
                 modifier = Modifier.size(24.dp)

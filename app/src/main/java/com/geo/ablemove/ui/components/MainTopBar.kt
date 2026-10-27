@@ -7,8 +7,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -17,8 +15,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import com.geo.ablemove.ui.theme.GeoGOTheme
+import com.geo.ablemove.R
 
 @Composable
 fun MainTopBar(
@@ -43,8 +42,8 @@ fun MainTopBar(
                 )
         ) {
             Icon(
-                imageVector = Icons.Default.Person,
-                contentDescription = "Профиль",
+                painter = painterResource(R.drawable.ic_profile),
+                contentDescription = "profile icon",
                 tint = MaterialTheme.colorScheme.primary
             )
         }

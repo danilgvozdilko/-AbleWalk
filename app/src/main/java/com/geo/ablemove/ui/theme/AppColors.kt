@@ -18,7 +18,13 @@ data class AppColors(
     val gradientEnd: Color,
     val temperatureCold: Color,
     val temperatureMild: Color,
-    val temperatureWarm: Color
+    val temperatureWarm: Color,
+    val aqiUnknown: Color,
+    val aqiGood: Color,
+    val aqiFair: Color,
+    val aqiModerate: Color,
+    val aqiPoor: Color,
+    val aqiVeryPoor: Color
 ) {
     val temperatureGradient: List<Color>
         get() = listOf(
@@ -26,6 +32,15 @@ data class AppColors(
             temperatureMild,
             temperatureWarm
         )
+
+    fun aqiColor(aqi: Int?): Color = when {
+        aqi == null -> aqiUnknown
+        aqi <= 20 -> aqiGood
+        aqi <= 40 -> aqiFair
+        aqi <= 60 -> aqiModerate
+        aqi <= 80 -> aqiPoor
+        else -> aqiVeryPoor
+    }
 }
 
 val LightAppColors = AppColors(
@@ -37,7 +52,13 @@ val LightAppColors = AppColors(
     gradientEnd = Color(0xFFFFFFFF),
     temperatureCold = Color(0xFF008F75),
     temperatureMild = Color(0xFF368AF5),
-    temperatureWarm = Color(0xFFFFC52E)
+    temperatureWarm = Color(0xFFFFC52E),
+    aqiUnknown = Color(0xFF64748B),
+    aqiGood = Color(0xFF008C69),
+    aqiFair = Color(0xFF16A34A),
+    aqiModerate = Color(0xFFF59E0B),
+    aqiPoor = Color(0xFFF97316),
+    aqiVeryPoor = Color(0xFFEF4444)
 )
 
 val DarkAppColors = AppColors(
@@ -49,7 +70,13 @@ val DarkAppColors = AppColors(
     gradientEnd = Color(0xFF000000),
     temperatureCold = Color(0xFF20BFA0),
     temperatureMild = Color(0xFF70ADFF),
-    temperatureWarm = Color(0xFFFFD45C)
+    temperatureWarm = Color(0xFFFFD45C),
+    aqiUnknown = Color(0xFF94A3B8),
+    aqiGood = Color(0xFF34D399),
+    aqiFair = Color(0xFF4ADE80),
+    aqiModerate = Color(0xFFFBBF24),
+    aqiPoor = Color(0xFFFB923C),
+    aqiVeryPoor = Color(0xFFF87171)
 )
 
 internal val LocalAppColors = staticCompositionLocalOf {

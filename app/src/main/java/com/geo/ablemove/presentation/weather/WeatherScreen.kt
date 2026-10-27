@@ -22,9 +22,12 @@ import com.geo.ablemove.domain.model.UnitFormatting
 import com.geo.ablemove.domain.model.Weather
 import com.geo.ablemove.domain.model.WeatherCode
 import com.geo.ablemove.presentation.home.UiState
+import com.geo.ablemove.presentation.weather.components.AirQualityCard
+import com.geo.ablemove.presentation.weather.components.MarineCard
 import com.geo.ablemove.presentation.weather.components.weather.WeatherCard
 import com.geo.ablemove.presentation.weather.components.weather.WeatherCardShimmer
 import com.geo.ablemove.ui.components.background.WeatherBackground
+import com.geo.ablemove.ui.components.cards.ErrorCard
 import com.geo.ablemove.ui.components.shimmer.ShimmerPlaceholder
 import com.geo.ablemove.ui.components.shimmer.ShimmerProvider
 import com.geo.ablemove.ui.theme.WeatherTheme
@@ -65,6 +68,7 @@ fun WeatherScreen(
             )
             MarineBlock(
                 state = state.marine,
+                unitFormatting = unitFormatting,
                 onRetry = viewModel::retryMarine
             )
         }
@@ -99,7 +103,7 @@ fun WeatherBlock(
 ) {
     when (state) {
         is UiState.Error -> {
-
+            ErrorCard(onClick = onRetry)
         }
 
         UiState.Loading -> {
@@ -119,6 +123,10 @@ fun AirQualityBlock(
 ) {
     when (state) {
         is UiState.Error -> {
+            ErrorCard(onClick = onRetry)
+        }
+
+        UiState.Loading -> {
             ShimmerPlaceholder(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -126,12 +134,8 @@ fun AirQualityBlock(
             )
         }
 
-        UiState.Loading -> {
-
-        }
-
         is UiState.Success -> {
-
+            AirQualityCard(state.data)
         }
     }
 }
@@ -139,23 +143,24 @@ fun AirQualityBlock(
 @Composable
 fun MarineBlock(
     state: UiState<Marine>,
-    onRetry: () -> Unit
+    onRetry: () -> Unit,
+    unitFormatting: UnitFormatting
 ) {
     when (state) {
         is UiState.Error -> {
-            ShimmerPlaceholder(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .aspectRatio(4f / 2f)
-            )
+            ErrorCard(onClick = onRetry)
         }
 
         UiState.Loading -> {
-
+            ShimmerPlaceholder(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .aspectRatio(4f / 3f)
+            )
         }
 
         is UiState.Success -> {
-
+            MarineCard(state.data, unitFormatting)
         }
     }
 }
