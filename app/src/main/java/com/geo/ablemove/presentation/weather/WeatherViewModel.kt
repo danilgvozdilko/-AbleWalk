@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.geo.ablemove.domain.datastore.UnitFormattingPreferences
 import com.geo.ablemove.domain.model.TemperatureUnit
 import com.geo.ablemove.domain.model.UnitFormatting
+import com.geo.ablemove.domain.model.WindSpeedUnit
 import com.geo.ablemove.domain.model.filterNext24Hours
 import com.geo.ablemove.domain.source.LocationRepository
 import com.geo.ablemove.domain.usecase.AirQualityUseCase
@@ -58,23 +59,27 @@ class WeatherViewModel @Inject constructor(
     private fun observeTemperatureUnit() {
         viewModelScope.launch {
             unitFormattingPreferences.unitFormatting
-                .map { it.temperature }
+                .map { preferences ->
+                    preferences.temperature to preferences.windSpeed
+                }
                 .distinctUntilChanged()
-                .collectLatest { temperatureUnit ->
-                    loadWeather(temperatureUnit)
+                .collectLatest { (temperatureUnit, windSpeedUnit) ->
+                    loadWeather(temperatureUnit, windSpeedUnit)
                 }
         }
     }
 
     private suspend fun loadWeather(
-        temperatureUnit: TemperatureUnit
+        temperatureUnit: TemperatureUnit,
+        windSpeedUnit: WindSpeedUnit
     ) {
         _uiState.update {
             it.copy(weather = UiState.Loading)
         }
 
         val result = weatherUserCase.getWeather(
-            temperatureUnit = temperatureUnit.name.lowercase()
+            temperatureUnit = temperatureUnit.name.lowercase(),
+            windSpeedUnit = windSpeedUnit.name.lowercase()
         )
 
         result.onSuccess { weather ->
@@ -160,12 +165,10 @@ class WeatherViewModel @Inject constructor(
 
     fun retryWeather() {
         viewModelScope.launch {
-            val temperatureUnit = unitFormattingPreferences
+            val unitFormatting = unitFormattingPreferences
                 .unitFormatting
                 .first()
-                .temperature
-
-            loadWeather(temperatureUnit)
+            loadWeather(unitFormatting.temperature, unitFormatting.windSpeed)
         }
     }
 

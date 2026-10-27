@@ -6,6 +6,7 @@ interface WeatherSource {
     suspend fun getWeather(
         latitude: Double,
         longitude: Double,
-        temperatureUnit: String = "celsius"
+        temperatureUnit: String = "celsius",
+        windSpeedUnit: String = "kmh"
     ): Result<Weather>
 }

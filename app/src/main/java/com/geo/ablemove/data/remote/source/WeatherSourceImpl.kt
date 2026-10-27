@@ -12,10 +12,16 @@ class WeatherSourceImpl @Inject constructor(private val weatherApi: WeatherApi) 
     override suspend fun getWeather(
         latitude: Double,
         longitude: Double,
-        temperatureUnit: String
+        temperatureUnit: String,
+        windSpeedUnit: String
     ): Result<Weather> {
         return safeApiCall {
-            weatherApi.getForecast(latitude, longitude, temperatureUnit = temperatureUnit)
+            weatherApi.getForecast(
+                latitude,
+                longitude,
+                temperatureUnit = temperatureUnit,
+                windSpeedUnit = windSpeedUnit
+            )
                 .toDomain()
         }
     }
