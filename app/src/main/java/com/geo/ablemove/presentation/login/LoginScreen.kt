@@ -26,12 +26,14 @@ import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material.icons.filled.WbSunny
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -72,6 +74,7 @@ import kotlin.coroutines.cancellation.CancellationException
 @Composable
 fun LoginRoute(
     onLoginSuccess: () -> Unit,
+    onCreateAccountClick: () -> Unit,
     viewModel: LoginViewModel = hiltViewModel()
 ) {
 
@@ -79,6 +82,14 @@ fun LoginRoute(
     val scope = rememberCoroutineScope()
 
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    var showForgotPasswordDialog by rememberSaveable {
+        mutableStateOf(false)
+    }
+
+    var resetEmail by rememberSaveable {
+        mutableStateOf("")
+    }
 
     val webClientId = stringResource(R.string.google_web_client_id)
 
@@ -91,16 +102,30 @@ fun LoginRoute(
     }
 
     LaunchedEffect(uiState) {
-        Log.d("FacebookAuth", "UI State: $uiState")
-
         if (uiState is LoginUiState.Success) {
-            Log.d("FacebookAuth", "Navigating after successful login")
             onLoginSuccess()
         }
     }
 
     LoginScreen(
         isLoading = uiState is LoginUiState.Loading,
+        onForgotPasswordClick = { email ->
+            resetEmail = email
+            viewModel.resetUiState()
+            showForgotPasswordDialog = true
+        },
+        onCreateAccountClick = {
+            onCreateAccountClick.invoke()
+        },
+        onGuestClick = {
+            viewModel.signInGuest()
+        },
+        onLoginClick = { email, password ->
+            viewModel.signInWithEmail(
+                email = email,
+                password = password
+            )
+        },
         onGoogleClick = {
             if (uiState !is LoginUiState.Loading) {
                 viewModel.onGoogleSignInStarted()
@@ -158,13 +183,27 @@ fun LoginRoute(
             }
         }
     )
+
+    if (showForgotPasswordDialog) {
+        ForgotPasswordDialog(
+            initialEmail = resetEmail,
+            uiState = uiState,
+            onDismiss = {
+                showForgotPasswordDialog = false
+                viewModel.resetUiState()
+            },
+            onSendClick = { email ->
+                viewModel.sendPasswordResetEmail(email)
+            }
+        )
+    }
 }
 
 @Composable
 fun LoginScreen(
     isLoading: Boolean = false,
     onLoginClick: (String, String) -> Unit = { _, _ -> },
-    onForgotPasswordClick: () -> Unit = {},
+    onForgotPasswordClick: (String) -> Unit = {},
     onCreateAccountClick: () -> Unit = {},
     onGoogleClick: () -> Unit = {},
     onFacebookClick: () -> Unit = {},
@@ -294,13 +333,11 @@ fun LoginScreen(
                     )
 
                     TextButton(
-                        onClick = onForgotPasswordClick,
+                        onClick = { onForgotPasswordClick(email) },
                         contentPadding = PaddingValues(0.dp)
                     ) {
                         Text(
-                            text = stringResource(
-                                R.string.login_forgot_password
-                            ),
+                            text = stringResource(R.string.login_forgot_password),
                             color = colorScheme.primary
                         )
                     }
@@ -456,6 +493,95 @@ fun LoginScreen(
             Spacer(Modifier.height(24.dp))
         }
     }
+}
+
+@Composable
+fun ForgotPasswordDialog(
+    initialEmail: String,
+    uiState: LoginUiState,
+    onDismiss: () -> Unit,
+    onSendClick: (String) -> Unit
+) {
+    var email by rememberSaveable(initialEmail) {
+        mutableStateOf(initialEmail)
+    }
+
+    val isLoading = uiState is LoginUiState.Loading
+    val isSuccess = uiState is LoginUiState.PasswordResetEmailSent
+
+    AlertDialog(
+        onDismissRequest = {
+            if (!isLoading) onDismiss()
+        },
+        title = {
+            Text("Reset password")
+        },
+        text = {
+            Column {
+                if (isSuccess) {
+                    Text(
+                        "If an account exists for this email, " +
+                                "you'll receive a password reset link."
+                    )
+                } else {
+                    Text(
+                        "Enter your email address to receive " +
+                                "a password reset link."
+                    )
+
+                    Spacer(Modifier.height(16.dp))
+
+                    OutlinedTextField(
+                        value = email,
+                        onValueChange = { email = it },
+                        label = { Text("Email") },
+                        singleLine = true,
+                        enabled = !isLoading,
+                        keyboardOptions = KeyboardOptions(
+                            keyboardType = KeyboardType.Email
+                        ),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    if (uiState is LoginUiState.Error) {
+                        Spacer(Modifier.height(8.dp))
+
+                        Text(
+                            text = uiState.message,
+                            color = MaterialTheme.colorScheme.error
+                        )
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    if (isSuccess) {
+                        onDismiss()
+                    } else {
+                        onSendClick(email.trim())
+                    }
+                },
+                enabled = isSuccess ||
+                        (!isLoading &&
+                                android.util.Patterns.EMAIL_ADDRESS
+                                    .matcher(email.trim()).matches())
+            ) {
+                Text(if (isSuccess) "Done" else "Send link")
+            }
+        },
+        dismissButton = {
+            if (!isSuccess) {
+                TextButton(
+                    onClick = onDismiss,
+                    enabled = !isLoading
+                ) {
+                    Text("Cancel")
+                }
+            }
+        }
+    )
 }
 
 

@@ -4,6 +4,9 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.geo.ablemove.domain.datastore.UserDataPreferences
+import com.geo.ablemove.domain.model.AuthUser
+import com.geo.ablemove.domain.usecase.SendPasswordResetEmailUseCase
+import com.geo.ablemove.domain.usecase.SignInWithEmailUseCase
 import com.geo.ablemove.domain.usecase.SignInWithFacebookUseCase
 import com.geo.ablemove.domain.usecase.SignInWithGoogleUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -17,6 +20,8 @@ import javax.inject.Inject
 class LoginViewModel @Inject constructor(
     private val signInWithGoogleUseCase: SignInWithGoogleUseCase,
     private val signInWithFacebookUseCase: SignInWithFacebookUseCase,
+    private val signInWithEmailUseCase: SignInWithEmailUseCase,
+    private val resetEmailUseCase: SendPasswordResetEmailUseCase,
     private val userDataPreferences: UserDataPreferences
 ) : ViewModel() {
 
@@ -100,5 +105,69 @@ class LoginViewModel @Inject constructor(
                 )
             }
         }
+    }
+
+    fun signInGuest() {
+        viewModelScope.launch {
+            _uiState.value = LoginUiState.Loading
+            userDataPreferences.setIsLogined(true)
+            _uiState.value = LoginUiState.Success(AuthUser())
+        }
+    }
+
+    fun signInWithEmail(
+        email: String,
+        password: String
+    ) {
+        if (_uiState.value is LoginUiState.Loading) return
+
+        viewModelScope.launch {
+            _uiState.value = LoginUiState.Loading
+
+            try {
+                val user = signInWithEmailUseCase(
+                    email = email,
+                    password = password
+                )
+
+                userDataPreferences.setUserData(user)
+                userDataPreferences.setIsLogined(true)
+
+                _uiState.value = LoginUiState.Success(user)
+
+            } catch (e: CancellationException) {
+                throw e
+
+            } catch (e: Exception) {
+                _uiState.value = LoginUiState.Error(
+                    e.localizedMessage ?: "Email sign-in failed"
+                )
+            }
+        }
+    }
+
+    fun sendPasswordResetEmail(email: String) {
+        if (_uiState.value is LoginUiState.Loading) return
+
+        viewModelScope.launch {
+            _uiState.value = LoginUiState.Loading
+
+            try {
+                sendPasswordResetEmail(email)
+
+                _uiState.value = LoginUiState.PasswordResetEmailSent
+
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                _uiState.value = LoginUiState.Error(
+                    e.localizedMessage ?: "Failed to send reset email"
+                )
+            }
+        }
+    }
+
+    fun resetUiState() {
+        _uiState.value = LoginUiState.Idle
     }
 }

@@ -1,5 +1,8 @@
 package com.geo.ablemove.presentation.registration
 
+import android.util.Log
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -23,6 +26,7 @@ import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material.icons.filled.WbSunny
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -30,8 +34,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -46,22 +53,162 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.credentials.exceptions.GetCredentialCancellationException
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.geo.ablemove.R
+import com.geo.ablemove.data.helpers.FacebookSignInCancelledException
+import com.geo.ablemove.data.helpers.FacebookSignInManager
+import com.geo.ablemove.data.helpers.GoogleSignInManager
 import com.geo.ablemove.ui.components.background.Background
 import com.geo.ablemove.ui.components.buttons.SocialLoginButton
 import com.geo.ablemove.ui.components.text.LoginTextField
 import com.geo.ablemove.ui.theme.AbleMoveDimens
+import kotlinx.coroutines.launch
+import kotlin.coroutines.cancellation.CancellationException
 
 @Composable
-fun RegistrationScreen() {
+fun RegistrationRoute(
+    onRegistrationSuccess: () -> Unit,
+    onNavigateToLogin: () -> Unit,
+    viewModel: RegistrationViewModel = hiltViewModel()
+) {
+    val activity = LocalActivity.current as ComponentActivity
+    val scope = rememberCoroutineScope()
+
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    val webClientId = stringResource(
+        R.string.google_web_client_id
+    )
+
+    val googleSignInManager = remember {
+        GoogleSignInManager()
+    }
+
+    val facebookSignInManager = remember {
+        FacebookSignInManager()
+    }
+
+    LaunchedEffect(uiState) {
+        if (uiState is RegistrationUiState.Success) {
+            onRegistrationSuccess()
+        }
+    }
+
+    RegistrationScreen(
+        uiState = uiState,
+
+        onRegisterClick = viewModel::registerWithEmail,
+
+        onGoogleClick = {
+            if (uiState !is RegistrationUiState.Loading) {
+                viewModel.onSocialSignInStarted()
+
+                scope.launch {
+                    try {
+                        val idToken = googleSignInManager.signIn(
+                            activity = activity,
+                            webClientId = webClientId
+                        )
+
+                        viewModel.signInWithGoogle(idToken)
+
+                    } catch (e: GetCredentialCancellationException) {
+                        viewModel.onSocialSignInCancelled()
+
+                    } catch (e: CancellationException) {
+                        viewModel.onSocialSignInCancelled()
+                        throw e
+
+                    } catch (e: Exception) {
+                        Log.e(
+                            "RegistrationAuth",
+                            "Google sign-in failed",
+                            e
+                        )
+
+                        viewModel.onSocialSignInError(e)
+                    }
+                }
+            }
+        },
+
+        onFacebookClick = {
+            if (uiState !is RegistrationUiState.Loading) {
+                viewModel.onSocialSignInStarted()
+
+                scope.launch {
+                    try {
+                        Log.d(
+                            "RegistrationAuth",
+                            "Starting Facebook SDK"
+                        )
+
+                        val accessToken =
+                            facebookSignInManager.signIn(activity)
+
+                        viewModel.signInWithFacebook(accessToken)
+
+                    } catch (e: FacebookSignInCancelledException) {
+                        viewModel.onSocialSignInCancelled()
+
+                    } catch (e: CancellationException) {
+                        viewModel.onSocialSignInCancelled()
+                        throw e
+
+                    } catch (e: Exception) {
+                        Log.e(
+                            "RegistrationAuth",
+                            "Facebook sign-in failed",
+                            e
+                        )
+
+                        viewModel.onSocialSignInError(e)
+                    }
+                }
+            }
+        },
+
+        onGuestClick = viewModel::signInAsGuest,
+
+        onSignInClick = onNavigateToLogin,
+
+        onClearError = viewModel::clearError
+    )
+}
+
+@Composable
+fun RegistrationScreen(
+    uiState: RegistrationUiState,
+    onRegisterClick: (
+        nickname: String,
+        email: String,
+        password: String,
+        confirmPassword: String
+    ) -> Unit,
+    onGoogleClick: () -> Unit,
+    onFacebookClick: () -> Unit,
+    onGuestClick: () -> Unit,
+    onSignInClick: () -> Unit,
+    onClearError: () -> Unit
+) {
+    var nickname by rememberSaveable { mutableStateOf("") }
     var email by rememberSaveable { mutableStateOf("") }
     var password by rememberSaveable { mutableStateOf("") }
     var confirmPassword by rememberSaveable { mutableStateOf("") }
 
-    var passwordVisible by rememberSaveable { mutableStateOf(false) }
-    var confirmPasswordVisible by rememberSaveable { mutableStateOf(false) }
+    var passwordVisible by rememberSaveable {
+        mutableStateOf(false)
+    }
+
+    var confirmPasswordVisible by rememberSaveable {
+        mutableStateOf(false)
+    }
 
     val colorScheme = MaterialTheme.colorScheme
+    val isLoading = uiState is RegistrationUiState.Loading
+    val error = (uiState as? RegistrationUiState.Error)?.message
 
     Background {
         Column(
@@ -108,7 +255,9 @@ fun RegistrationScreen() {
             Spacer(Modifier.height(12.dp))
 
             Text(
-                text = stringResource(R.string.registration_description),
+                text = stringResource(
+                    R.string.registration_description
+                ),
                 style = MaterialTheme.typography.bodyLarge,
                 color = colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,
@@ -117,7 +266,6 @@ fun RegistrationScreen() {
 
             Spacer(Modifier.height(28.dp))
 
-            // Registration card
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -126,7 +274,9 @@ fun RegistrationScreen() {
                     .padding(28.dp)
             ) {
                 Text(
-                    text = stringResource(R.string.registration_welcome),
+                    text = stringResource(
+                        R.string.registration_welcome
+                    ),
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold,
                     color = colorScheme.onSurface
@@ -135,27 +285,56 @@ fun RegistrationScreen() {
                 Spacer(Modifier.height(4.dp))
 
                 Text(
-                    text = stringResource(R.string.registration_subtitle),
+                    text = stringResource(
+                        R.string.registration_subtitle
+                    ),
                     style = MaterialTheme.typography.bodyMedium,
                     color = colorScheme.onSurfaceVariant
                 )
 
                 Spacer(Modifier.height(30.dp))
 
+                // Nickname
+                RegistrationFieldLabel(
+                    text = stringResource(
+                        R.string.registration_nickname_label
+                    )
+                )
+
+                Spacer(Modifier.height(8.dp))
+
+                LoginTextField(
+                    value = nickname,
+                    onValueChange = {
+                        nickname = it
+                        onClearError()
+                    },
+                    placeholder = stringResource(
+                        R.string.registration_nickname_placeholder
+                    ),
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Text,
+                        imeAction = ImeAction.Next
+                    )
+                )
+
+                Spacer(Modifier.height(22.dp))
+
                 // Email
-                Text(
+                RegistrationFieldLabel(
                     text = stringResource(
                         R.string.registration_email_label
-                    ),
-                    style = MaterialTheme.typography.labelLarge,
-                    color = colorScheme.onSurface
+                    )
                 )
 
                 Spacer(Modifier.height(8.dp))
 
                 LoginTextField(
                     value = email,
-                    onValueChange = { email = it },
+                    onValueChange = {
+                        email = it
+                        onClearError()
+                    },
                     placeholder = stringResource(
                         R.string.registration_email_placeholder
                     ),
@@ -175,19 +354,20 @@ fun RegistrationScreen() {
                 Spacer(Modifier.height(22.dp))
 
                 // Password
-                Text(
+                RegistrationFieldLabel(
                     text = stringResource(
                         R.string.registration_password_label
-                    ),
-                    style = MaterialTheme.typography.labelLarge,
-                    color = colorScheme.onSurface
+                    )
                 )
 
                 Spacer(Modifier.height(8.dp))
 
                 LoginTextField(
                     value = password,
-                    onValueChange = { password = it },
+                    onValueChange = {
+                        password = it
+                        onClearError()
+                    },
                     placeholder = stringResource(
                         R.string.registration_password_placeholder
                     ),
@@ -224,27 +404,29 @@ fun RegistrationScreen() {
                 Spacer(Modifier.height(22.dp))
 
                 // Confirm password
-                Text(
+                RegistrationFieldLabel(
                     text = stringResource(
                         R.string.registration_confirm_password_label
-                    ),
-                    style = MaterialTheme.typography.labelLarge,
-                    color = colorScheme.onSurface
+                    )
                 )
 
                 Spacer(Modifier.height(8.dp))
 
                 LoginTextField(
                     value = confirmPassword,
-                    onValueChange = { confirmPassword = it },
+                    onValueChange = {
+                        confirmPassword = it
+                        onClearError()
+                    },
                     placeholder = stringResource(
                         R.string.registration_confirm_password_placeholder
                     ),
-                    visualTransformation = if (confirmPasswordVisible) {
-                        VisualTransformation.None
-                    } else {
-                        PasswordVisualTransformation()
-                    },
+                    visualTransformation =
+                        if (confirmPasswordVisible) {
+                            VisualTransformation.None
+                        } else {
+                            PasswordVisualTransformation()
+                        },
                     trailingIcon = {
                         IconButton(
                             onClick = {
@@ -253,11 +435,12 @@ fun RegistrationScreen() {
                             }
                         ) {
                             Icon(
-                                imageVector = if (confirmPasswordVisible) {
-                                    Icons.Default.VisibilityOff
-                                } else {
-                                    Icons.Default.Visibility
-                                },
+                                imageVector =
+                                    if (confirmPasswordVisible) {
+                                        Icons.Default.VisibilityOff
+                                    } else {
+                                        Icons.Default.Visibility
+                                    },
                                 contentDescription = stringResource(
                                     R.string.registration_password_visibility
                                 ),
@@ -273,11 +456,28 @@ fun RegistrationScreen() {
 
                 Spacer(Modifier.height(24.dp))
 
-                // Create account button
+                // Validation error
+                if (error != null) {
+                    Text(
+                        text = error,
+                        color = colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+
+                    Spacer(Modifier.height(12.dp))
+                }
+
+                // Create account
                 Button(
                     onClick = {
-                        // onRegisterClick(email, password)
+                        onRegisterClick(
+                            nickname,
+                            email,
+                            password,
+                            confirmPassword
+                        )
                     },
+                    enabled = !isLoading,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(56.dp),
@@ -287,20 +487,29 @@ fun RegistrationScreen() {
                         contentColor = colorScheme.onPrimary
                     )
                 ) {
-                    Text(
-                        text = stringResource(
-                            R.string.registration_sign_up
-                        ),
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.SemiBold
-                    )
+                    if (isLoading) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(24.dp),
+                            color = colorScheme.onPrimary,
+                            strokeWidth = 2.dp
+                        )
+                    } else {
+                        Text(
+                            text = stringResource(
+                                R.string.registration_sign_up
+                            ),
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.SemiBold
+                        )
 
-                    Spacer(Modifier.width(12.dp))
+                        Spacer(Modifier.width(12.dp))
 
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                        contentDescription = null
-                    )
+                        Icon(
+                            imageVector =
+                                Icons.AutoMirrored.Filled.ArrowForward,
+                            contentDescription = null
+                        )
+                    }
                 }
 
                 Spacer(Modifier.height(24.dp))
@@ -319,7 +528,9 @@ fun RegistrationScreen() {
                         text = stringResource(
                             R.string.registration_or_continue_with
                         ),
-                        modifier = Modifier.padding(horizontal = 12.dp),
+                        modifier = Modifier.padding(
+                            horizontal = 12.dp
+                        ),
                         style = MaterialTheme.typography.labelMedium,
                         color = colorScheme.onSurfaceVariant
                     )
@@ -338,7 +549,7 @@ fun RegistrationScreen() {
                     ),
                     icon = R.drawable.ic_google,
                     onClick = {
-                        // onGoogleSignUpClick()
+                        if (!isLoading) onGoogleClick()
                     }
                 )
 
@@ -350,7 +561,7 @@ fun RegistrationScreen() {
                     ),
                     icon = R.drawable.ic_facebook,
                     onClick = {
-                        // onFacebookSignUpClick()
+                        if (!isLoading) onFacebookClick()
                     }
                 )
             }
@@ -369,9 +580,8 @@ fun RegistrationScreen() {
                 )
 
                 TextButton(
-                    onClick = {
-                        // onSignInClick()
-                    }
+                    onClick = onSignInClick,
+                    enabled = !isLoading
                 ) {
                     Text(
                         text = stringResource(
@@ -385,9 +595,8 @@ fun RegistrationScreen() {
 
             // Guest mode
             TextButton(
-                onClick = {
-                    // onGuestClick()
-                }
+                onClick = onGuestClick,
+                enabled = !isLoading
             ) {
                 Text(
                     text = stringResource(
@@ -400,7 +609,8 @@ fun RegistrationScreen() {
                 Spacer(Modifier.width(8.dp))
 
                 Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                    imageVector =
+                        Icons.AutoMirrored.Filled.ArrowForward,
                     contentDescription = null,
                     tint = colorScheme.primary,
                     modifier = Modifier.size(18.dp)
@@ -410,4 +620,15 @@ fun RegistrationScreen() {
             Spacer(Modifier.height(24.dp))
         }
     }
+}
+
+@Composable
+private fun RegistrationFieldLabel(
+    text: String
+) {
+    Text(
+        text = text,
+        style = MaterialTheme.typography.labelLarge,
+        color = MaterialTheme.colorScheme.onSurface
+    )
 }

@@ -7,7 +7,7 @@ import androidx.navigation.compose.composable
 import com.geo.ablemove.presentation.home.HomeScreen
 import com.geo.ablemove.presentation.login.LoginRoute
 import com.geo.ablemove.presentation.profile.ProfileScreen
-import com.geo.ablemove.presentation.registration.RegistrationScreen
+import com.geo.ablemove.presentation.registration.RegistrationRoute
 import com.geo.ablemove.presentation.settings.SettingsScreen
 import com.geo.ablemove.presentation.splash.SplashRoute
 import com.geo.ablemove.ui.theme.ThemeMode
@@ -66,11 +66,32 @@ fun NavigationHost(
                     }
                     launchSingleTop = true
                 }
+            }, onCreateAccountClick = {
+                navController.navigate(ScreenRoutes.RegistrationRoute) {
+                    popUpTo(ScreenRoutes.LoginRoute) {
+                        inclusive = true
+                    }
+                    launchSingleTop = true
+                }
             })
         }
 
         composable<ScreenRoutes.RegistrationRoute> {
-            RegistrationScreen()
+            RegistrationRoute(onRegistrationSuccess = {
+                navController.navigate(ScreenRoutes.HomeRoute) {
+                    popUpTo(ScreenRoutes.RegistrationRoute) {
+                        inclusive = true
+                    }
+                    launchSingleTop = true
+                }
+            }, onNavigateToLogin = {
+                navController.navigate(ScreenRoutes.LoginRoute) {
+                    popUpTo(ScreenRoutes.LoginRoute) {
+                        inclusive = true
+                    }
+                    launchSingleTop = true
+                }
+            })
         }
 
         composable<ScreenRoutes.HomeRoute> {

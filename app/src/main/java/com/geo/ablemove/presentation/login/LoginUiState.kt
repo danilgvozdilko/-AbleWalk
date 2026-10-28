@@ -15,4 +15,7 @@ sealed interface LoginUiState {
     data class Error(
         val message: String
     ) : LoginUiState
+
+    data object PasswordResetEmailSent : LoginUiState
+
 }

@@ -1,5 +1,6 @@
 package com.geo.ablemove.presentation.home
 
+import android.util.Log
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Scaffold
@@ -18,11 +19,22 @@ import com.geo.ablemove.ui.components.background.Background
 import com.geo.ablemove.ui.components.MainBottomBar
 import com.geo.ablemove.ui.components.MainTab
 import com.geo.ablemove.ui.components.MainTopBar
+import com.google.firebase.auth.FirebaseAuth
 
 @Composable
 fun HomeScreen(
     onProfileClick: () -> Unit
 ) {
+//    FirebaseAuth.getInstance()
+//        .currentUser
+//        ?.sendEmailVerification()
+//        ?.addOnSuccessListener {
+//            Log.d("FirebaseEmail", "Verification email request successful")
+//        }
+//        ?.addOnFailureListener { exception ->
+//            Log.e("FirebaseEmail", "Verification failed", exception)
+//        }
+
     val navController = rememberNavController()
 
     val backStackEntry by navController
