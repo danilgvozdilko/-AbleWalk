@@ -1,6 +1,5 @@
 package com.geo.ablemove.presentation.login
 
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.background
@@ -29,6 +28,7 @@ import androidx.compose.material.icons.filled.WbSunny
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -101,83 +101,57 @@ fun LoginRoute(
         FacebookSignInManager()
     }
 
-    LaunchedEffect(uiState) {
-        if (uiState is LoginUiState.Success) {
-            onLoginSuccess()
-        }
+    LaunchedEffect(uiState.isAuthenticated) {
+        if (uiState.isAuthenticated) onLoginSuccess()
     }
 
     LoginScreen(
-        isLoading = uiState is LoginUiState.Loading,
+        isLoading = uiState.isLoading,
+        emailError = uiState.emailError,
+        passwordError = uiState.passwordError,
+        loginError = uiState.loginError,
+        onEmailChanged = viewModel::onEmailChanged,
+        onPasswordChanged = viewModel::onPasswordChanged,
         onForgotPasswordClick = { email ->
-            resetEmail = email
-            viewModel.resetUiState()
-            showForgotPasswordDialog = true
+            if (!uiState.isLoading) {
+                resetEmail = email
+                viewModel.openPasswordReset()
+                showForgotPasswordDialog = true
+            }
         },
-        onCreateAccountClick = {
-            onCreateAccountClick.invoke()
-        },
-        onGuestClick = {
-            viewModel.signInGuest()
-        },
-        onLoginClick = { email, password ->
-            viewModel.signInWithEmail(
-                email = email,
-                password = password
-            )
-        },
+        onCreateAccountClick = onCreateAccountClick,
+        onGuestClick = viewModel::signInGuest,
+        onLoginClick = viewModel::signInWithEmail,
         onGoogleClick = {
-            if (uiState !is LoginUiState.Loading) {
-                viewModel.onGoogleSignInStarted()
+            if (viewModel.tryStartSocialSignIn()) {
                 scope.launch {
                     try {
-                        val idToken = googleSignInManager.signIn(
-                            activity = activity,
-                            webClientId = webClientId
-                        )
-                        viewModel.signInWithGoogle(idToken)
+                        val token = googleSignInManager.signIn(activity, webClientId)
+                        viewModel.signInWithGoogle(token)
                     } catch (e: GetCredentialCancellationException) {
-                        viewModel.onGoogleSignInCancelled()
+                        viewModel.onSocialSignInCancelled()
                     } catch (e: CancellationException) {
-                        viewModel.onGoogleSignInCancelled()
+                        viewModel.onSocialSignInCancelled()
                         throw e
-
                     } catch (e: Exception) {
-                        viewModel.onGoogleSignInError(
-                            e.localizedMessage ?: "Google Sign-In failed"
-                        )
+                        viewModel.onSocialSignInError("Google", e)
                     }
                 }
             }
-        }, onFacebookClick = {
-            Log.d("FacebookAuth", "Facebook button clicked")
-
-            if (uiState !is LoginUiState.Loading) {
-                viewModel.onFacebookSignInStarted()
-
+        },
+        onFacebookClick = {
+            if (viewModel.tryStartSocialSignIn()) {
                 scope.launch {
                     try {
-                        Log.d("FacebookAuth", "Starting Facebook SDK")
-
-                        val accessToken = facebookSignInManager.signIn(activity)
-
-                        Log.d("FacebookAuth", "Facebook token received")
-
-                        viewModel.signInWithFacebook(accessToken)
-
+                        val token = facebookSignInManager.signIn(activity)
+                        viewModel.signInWithFacebook(token)
                     } catch (e: FacebookSignInCancelledException) {
-                        Log.d("FacebookAuth", "Login cancelled")
-                        viewModel.onFacebookSignInCancelled()
-
+                        viewModel.onSocialSignInCancelled()
                     } catch (e: CancellationException) {
-                        viewModel.onFacebookSignInCancelled()
+                        viewModel.onSocialSignInCancelled()
                         throw e
-
                     } catch (e: Exception) {
-                        Log.e("FacebookAuth", "Login failed", e)
-                        viewModel.onFacebookSignInError(
-                            e.localizedMessage ?: "Facebook sign-in failed"
-                        )
+                        viewModel.onSocialSignInError("Facebook", e)
                     }
                 }
             }
@@ -187,14 +161,12 @@ fun LoginRoute(
     if (showForgotPasswordDialog) {
         ForgotPasswordDialog(
             initialEmail = resetEmail,
-            uiState = uiState,
+            state = uiState.passwordReset,
             onDismiss = {
                 showForgotPasswordDialog = false
-                viewModel.resetUiState()
+                viewModel.dismissPasswordReset()
             },
-            onSendClick = { email ->
-                viewModel.sendPasswordResetEmail(email)
-            }
+            onSendClick = viewModel::sendPasswordResetEmail
         )
     }
 }
@@ -202,6 +174,11 @@ fun LoginRoute(
 @Composable
 fun LoginScreen(
     isLoading: Boolean = false,
+    emailError: String? = null,
+    passwordError: String? = null,
+    loginError: String? = null,
+    onEmailChanged: () -> Unit = {},
+    onPasswordChanged: () -> Unit = {},
     onLoginClick: (String, String) -> Unit = { _, _ -> },
     onForgotPasswordClick: (String) -> Unit = {},
     onCreateAccountClick: () -> Unit = {},
@@ -302,7 +279,7 @@ fun LoginScreen(
 
                 LoginTextField(
                     value = email,
-                    onValueChange = { email = it },
+                    onValueChange = { email = it; onEmailChanged() },
                     placeholder = stringResource(
                         R.string.login_email_placeholder
                     ),
@@ -319,6 +296,11 @@ fun LoginScreen(
                     )
                 )
 
+                if (emailError != null) {
+                    Spacer(Modifier.height(6.dp))
+                    Text(emailError, color = colorScheme.error, style = MaterialTheme.typography.bodySmall)
+                }
+
                 Spacer(Modifier.height(22.dp))
 
                 Row(
@@ -334,7 +316,8 @@ fun LoginScreen(
 
                     TextButton(
                         onClick = { onForgotPasswordClick(email) },
-                        contentPadding = PaddingValues(0.dp)
+                        contentPadding = PaddingValues(0.dp),
+                        enabled = !isLoading
                     ) {
                         Text(
                             text = stringResource(R.string.login_forgot_password),
@@ -347,7 +330,7 @@ fun LoginScreen(
 
                 LoginTextField(
                     value = password,
-                    onValueChange = { password = it },
+                    onValueChange = { password = it; onPasswordChanged() },
                     placeholder = stringResource(
                         R.string.login_password_placeholder
                     ),
@@ -381,6 +364,20 @@ fun LoginScreen(
                     )
                 )
 
+                if (passwordError != null) {
+                    Spacer(Modifier.height(6.dp))
+                    Text(passwordError, color = colorScheme.error, style = MaterialTheme.typography.bodySmall)
+                }
+
+                if (loginError != null) {
+                    Spacer(Modifier.height(12.dp))
+                    Text(
+                        loginError,
+                        color = colorScheme.error,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
+
                 Spacer(Modifier.height(20.dp))
 
                 Button(
@@ -391,23 +388,30 @@ fun LoginScreen(
                         .fillMaxWidth()
                         .height(56.dp),
                     shape = RoundedCornerShape(20.dp),
+                    enabled = !isLoading,
                     colors = ButtonDefaults.buttonColors(
                         containerColor = colorScheme.primary,
                         contentColor = colorScheme.onPrimary
                     )
                 ) {
-                    Text(
-                        text = stringResource(R.string.login_sign_in),
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.SemiBold
-                    )
-
-                    Spacer(Modifier.width(12.dp))
-
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                        contentDescription = null
-                    )
+                    if (isLoading) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(22.dp),
+                            strokeWidth = 2.dp,
+                            color = colorScheme.onPrimary
+                        )
+                    } else {
+                        Text(
+                            text = stringResource(R.string.login_sign_in),
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                        Spacer(Modifier.width(12.dp))
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                            contentDescription = null
+                        )
+                    }
                 }
 
                 Spacer(Modifier.height(24.dp))
@@ -450,7 +454,8 @@ fun LoginScreen(
                 SocialLoginButton(
                     text = stringResource(R.string.login_facebook),
                     icon = R.drawable.ic_facebook,
-                    onClick = onFacebookClick
+                    onClick = onFacebookClick,
+                    enabled = !isLoading
                 )
             }
 
@@ -464,7 +469,7 @@ fun LoginScreen(
                     color = colorScheme.onSurfaceVariant
                 )
 
-                TextButton(onClick = onCreateAccountClick) {
+                TextButton(onClick = onCreateAccountClick, enabled = !isLoading) {
                     Text(
                         text = stringResource(R.string.login_sign_up),
                         color = colorScheme.primary,
@@ -473,7 +478,7 @@ fun LoginScreen(
                 }
             }
 
-            TextButton(onClick = onGuestClick) {
+            TextButton(onClick = onGuestClick, enabled = !isLoading) {
                 Text(
                     text = stringResource(R.string.login_explore_guest),
                     color = colorScheme.primary,
@@ -498,92 +503,59 @@ fun LoginScreen(
 @Composable
 fun ForgotPasswordDialog(
     initialEmail: String,
-    uiState: LoginUiState,
+    state: PasswordResetState,
     onDismiss: () -> Unit,
     onSendClick: (String) -> Unit
 ) {
-    var email by rememberSaveable(initialEmail) {
-        mutableStateOf(initialEmail)
-    }
-
-    val isLoading = uiState is LoginUiState.Loading
-    val isSuccess = uiState is LoginUiState.PasswordResetEmailSent
+    var email by rememberSaveable(initialEmail) { mutableStateOf(initialEmail) }
+    val isLoading = state is PasswordResetState.Loading
+    val isSuccess = state is PasswordResetState.Sent
+    val isValidEmail = android.util.Patterns.EMAIL_ADDRESS.matcher(email.trim()).matches()
 
     AlertDialog(
-        onDismissRequest = {
-            if (!isLoading) onDismiss()
-        },
-        title = {
-            Text("Reset password")
-        },
+        onDismissRequest = { if (!isLoading) onDismiss() },
+        title = { Text("Reset password") },
         text = {
             Column {
                 if (isSuccess) {
-                    Text(
-                        "If an account exists for this email, " +
-                                "you'll receive a password reset link."
-                    )
+                    Text("If an account exists for this email, you'll receive a password reset link. Check your inbox and spam folder.")
                 } else {
-                    Text(
-                        "Enter your email address to receive " +
-                                "a password reset link."
-                    )
-
+                    Text("Enter your email address to receive a password reset link.")
                     Spacer(Modifier.height(16.dp))
-
                     OutlinedTextField(
                         value = email,
                         onValueChange = { email = it },
                         label = { Text("Email") },
                         singleLine = true,
                         enabled = !isLoading,
-                        keyboardOptions = KeyboardOptions(
-                            keyboardType = KeyboardType.Email
-                        ),
+                        isError = state is PasswordResetState.Error,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                         modifier = Modifier.fillMaxWidth()
                     )
-
-                    if (uiState is LoginUiState.Error) {
+                    if (state is PasswordResetState.Error) {
                         Spacer(Modifier.height(8.dp))
-
-                        Text(
-                            text = uiState.message,
-                            color = MaterialTheme.colorScheme.error
-                        )
+                        Text(state.message, color = MaterialTheme.colorScheme.error)
+                    }
+                    if (isLoading) {
+                        Spacer(Modifier.height(12.dp))
+                        CircularProgressIndicator(modifier = Modifier.size(22.dp), strokeWidth = 2.dp)
                     }
                 }
             }
         },
         confirmButton = {
             TextButton(
-                onClick = {
-                    if (isSuccess) {
-                        onDismiss()
-                    } else {
-                        onSendClick(email.trim())
-                    }
-                },
-                enabled = isSuccess ||
-                        (!isLoading &&
-                                android.util.Patterns.EMAIL_ADDRESS
-                                    .matcher(email.trim()).matches())
-            ) {
-                Text(if (isSuccess) "Done" else "Send link")
-            }
+                onClick = { if (isSuccess) onDismiss() else onSendClick(email.trim()) },
+                enabled = isSuccess || (!isLoading && isValidEmail)
+            ) { Text(if (isSuccess) "Done" else "Send link") }
         },
         dismissButton = {
             if (!isSuccess) {
-                TextButton(
-                    onClick = onDismiss,
-                    enabled = !isLoading
-                ) {
-                    Text("Cancel")
-                }
+                TextButton(onClick = onDismiss, enabled = !isLoading) { Text("Cancel") }
             }
         }
     )
 }
-
 
 @Preview
 @Composable

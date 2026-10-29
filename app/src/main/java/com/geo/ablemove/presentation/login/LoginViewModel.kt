@@ -1,19 +1,24 @@
 package com.geo.ablemove.presentation.login
 
-import android.util.Log
+import android.util.Patterns
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.geo.ablemove.data.mapper.AuthErrorMapper
 import com.geo.ablemove.domain.datastore.UserDataPreferences
 import com.geo.ablemove.domain.model.AuthUser
 import com.geo.ablemove.domain.usecase.SendPasswordResetEmailUseCase
 import com.geo.ablemove.domain.usecase.SignInWithEmailUseCase
 import com.geo.ablemove.domain.usecase.SignInWithFacebookUseCase
 import com.geo.ablemove.domain.usecase.SignInWithGoogleUseCase
+import com.google.firebase.FirebaseNetworkException
+import com.google.firebase.auth.FirebaseAuthException
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.io.IOException
 import javax.inject.Inject
 
 @HiltViewModel
@@ -25,149 +30,153 @@ class LoginViewModel @Inject constructor(
     private val userDataPreferences: UserDataPreferences
 ) : ViewModel() {
 
-    private val _uiState =
-        MutableStateFlow<LoginUiState>(LoginUiState.Idle)
-
+    private val _uiState = MutableStateFlow(LoginUiState())
     val uiState = _uiState.asStateFlow()
 
-    fun onGoogleSignInStarted() {
-        if (_uiState.value is LoginUiState.Loading) return
-        _uiState.value = LoginUiState.Loading
+    fun onEmailChanged() = _uiState.update {
+        it.copy(emailError = null, loginError = null)
     }
 
-    fun onGoogleSignInCancelled() {
-        _uiState.value = LoginUiState.Idle
+    fun onPasswordChanged() = _uiState.update {
+        it.copy(passwordError = null, loginError = null)
     }
 
-    fun onGoogleSignInError(message: String) {
-        _uiState.value = LoginUiState.Error(message)
+    fun tryStartSocialSignIn(): Boolean {
+        if (_uiState.value.isLoading || _uiState.value.isAuthenticated ||
+            _uiState.value.passwordReset is PasswordResetState.Loading
+        ) return false
+        _uiState.update { it.copy(isLoading = true, loginError = null) }
+        return true
     }
 
-    fun signInWithGoogle(idToken: String) {
+    fun onSocialSignInCancelled() {
+        _uiState.update { it.copy(isLoading = false) }
+    }
+
+    fun onSocialSignInError(provider: String, cause: Exception) {
+        _uiState.update {
+            it.copy(isLoading = false, loginError = AuthErrorMapper.message(cause, provider))
+        }
+    }
+
+    fun signInWithGoogle(idToken: String) = completeSocialSignIn {
+        signInWithGoogleUseCase(idToken)
+    }
+
+    fun signInWithFacebook(accessToken: String) = completeSocialSignIn {
+        signInWithFacebookUseCase(accessToken)
+    }
+
+    private fun completeSocialSignIn(signIn: suspend () -> AuthUser) {
+        // Called after tryStartSocialSignIn has reserved the operation.
         viewModelScope.launch {
-            _uiState.value = LoginUiState.Loading
-
             try {
-                val user = signInWithGoogleUseCase(idToken)
-                userDataPreferences.setIsLogined(true)
-                userDataPreferences.setUserData(user)
-                _uiState.value = LoginUiState.Success(user)
+                persistUser(signIn())
+                _uiState.update { it.copy(isAuthenticated = true) }
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                _uiState.value = LoginUiState.Error(
-                    e.localizedMessage ?: "Google sign-in failed"
-                )
+                _uiState.update { it.copy(loginError = AuthErrorMapper.message(e)) }
+            } finally {
+                _uiState.update { it.copy(isLoading = false) }
             }
         }
     }
 
-    fun onFacebookSignInStarted() {
-        if (_uiState.value is LoginUiState.Loading) return
-        _uiState.value = LoginUiState.Loading
-    }
+    fun signInWithEmail(email: String, password: String) {
+        if (!canStartLogin()) return
+        val normalizedEmail = email.trim()
+        val emailError = when {
+            normalizedEmail.isBlank() -> "Enter your email"
+            !Patterns.EMAIL_ADDRESS.matcher(normalizedEmail)
+                .matches() -> "Enter a valid email address"
 
-    fun onFacebookSignInCancelled() {
-        _uiState.value = LoginUiState.Idle
-    }
+            else -> null
+        }
+        val passwordError = if (password.isBlank()) "Enter your password" else null
+        if (emailError != null || passwordError != null) {
+            _uiState.update {
+                it.copy(emailError = emailError, passwordError = passwordError, loginError = null)
+            }
+            return
+        }
 
-    fun onFacebookSignInError(message: String) {
-        _uiState.value = LoginUiState.Error(message)
-    }
-
-    fun signInWithFacebook(accessToken: String) {
+        _uiState.update {
+            it.copy(isLoading = true, emailError = null, passwordError = null, loginError = null)
+        }
         viewModelScope.launch {
-            _uiState.value = LoginUiState.Loading
-
             try {
-                Log.d("FacebookAuth", "Starting Firebase authentication")
-
-                val user = signInWithFacebookUseCase(accessToken)
-
-                Log.d("FacebookAuth", "Firebase authentication success: ${user.id}")
-
-                userDataPreferences.setUserData(user)
-                userDataPreferences.setIsLogined(true)
-
-                Log.d("FacebookAuth", "User data saved")
-
-                _uiState.value = LoginUiState.Success(user)
-
-                Log.d("FacebookAuth", "LoginUiState.Success emitted")
-
+                persistUser(signInWithEmailUseCase(normalizedEmail, password))
+                _uiState.update { it.copy(isAuthenticated = true) }
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                Log.e("FacebookAuth", "Firebase authentication failed", e)
-
-                _uiState.value = LoginUiState.Error(
-                    e.localizedMessage ?: "Facebook sign-in failed"
-                )
+                _uiState.update { it.copy(loginError = AuthErrorMapper.message(e)) }
+            } finally {
+                _uiState.update { it.copy(isLoading = false) }
             }
         }
     }
 
     fun signInGuest() {
+        if (!canStartLogin()) return
+        _uiState.update { it.copy(isLoading = true, loginError = null) }
         viewModelScope.launch {
-            _uiState.value = LoginUiState.Loading
-            userDataPreferences.setIsLogined(true)
-            _uiState.value = LoginUiState.Success(AuthUser())
+            try {
+                userDataPreferences.setIsLogined(true)
+                _uiState.update { it.copy(isAuthenticated = true) }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                _uiState.update { it.copy(loginError = AuthErrorMapper.message(e)) }
+            } finally {
+                _uiState.update { it.copy(isLoading = false) }
+            }
         }
     }
 
-    fun signInWithEmail(
-        email: String,
-        password: String
-    ) {
-        if (_uiState.value is LoginUiState.Loading) return
+    private fun canStartLogin(): Boolean =
+        !_uiState.value.isLoading && !_uiState.value.isAuthenticated &&
+                _uiState.value.passwordReset !is PasswordResetState.Loading
 
-        viewModelScope.launch {
-            _uiState.value = LoginUiState.Loading
+    private suspend fun persistUser(user: AuthUser) {
+        userDataPreferences.setUserData(user)
+        userDataPreferences.setIsLogined(true)
+    }
 
-            try {
-                val user = signInWithEmailUseCase(
-                    email = email,
-                    password = password
-                )
+    fun openPasswordReset() {
+        if (_uiState.value.isLoading) return
+        _uiState.update { it.copy(passwordReset = PasswordResetState.Idle) }
+    }
 
-                userDataPreferences.setUserData(user)
-                userDataPreferences.setIsLogined(true)
-
-                _uiState.value = LoginUiState.Success(user)
-
-            } catch (e: CancellationException) {
-                throw e
-
-            } catch (e: Exception) {
-                _uiState.value = LoginUiState.Error(
-                    e.localizedMessage ?: "Email sign-in failed"
-                )
-            }
-        }
+    fun dismissPasswordReset() {
+        if (_uiState.value.passwordReset is PasswordResetState.Loading) return
+        _uiState.update { it.copy(passwordReset = PasswordResetState.Idle) }
     }
 
     fun sendPasswordResetEmail(email: String) {
-        if (_uiState.value is LoginUiState.Loading) return
-
+        if (_uiState.value.isLoading ||
+            _uiState.value.passwordReset is PasswordResetState.Loading
+        ) return
+        val normalizedEmail = email.trim()
+        if (!Patterns.EMAIL_ADDRESS.matcher(normalizedEmail).matches()) {
+            _uiState.update {
+                it.copy(passwordReset = PasswordResetState.Error("Enter a valid email address"))
+            }
+            return
+        }
+        _uiState.update { it.copy(passwordReset = PasswordResetState.Loading) }
         viewModelScope.launch {
-            _uiState.value = LoginUiState.Loading
-
             try {
-                sendPasswordResetEmail(email)
-
-                _uiState.value = LoginUiState.PasswordResetEmailSent
-
+                resetEmailUseCase(normalizedEmail)
+                _uiState.update { it.copy(passwordReset = PasswordResetState.Sent) }
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                _uiState.value = LoginUiState.Error(
-                    e.localizedMessage ?: "Failed to send reset email"
-                )
+                _uiState.update {
+                    it.copy(passwordReset = PasswordResetState.Error(AuthErrorMapper.resetMessage(e)))
+                }
             }
         }
-    }
-
-    fun resetUiState() {
-        _uiState.value = LoginUiState.Idle
     }
 }

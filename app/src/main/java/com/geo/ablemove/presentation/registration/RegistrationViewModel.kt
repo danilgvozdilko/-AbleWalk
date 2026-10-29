@@ -8,15 +8,19 @@ import com.geo.ablemove.domain.model.AuthUser
 import com.geo.ablemove.domain.usecase.RegisterWithEmailUseCase
 import com.geo.ablemove.domain.usecase.SignInWithFacebookUseCase
 import com.geo.ablemove.domain.usecase.SignInWithGoogleUseCase
+import com.google.firebase.FirebaseNetworkException
 import com.google.firebase.FirebaseTooManyRequestsException
 import com.google.firebase.auth.FirebaseAuthUserCollisionException
+import com.google.firebase.auth.FirebaseAuthWeakPasswordException
 import dagger.hilt.android.lifecycle.HiltViewModel
-import jakarta.inject.Inject
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlin.coroutines.cancellation.CancellationException
+import javax.inject.Inject
 
 @HiltViewModel
 class RegistrationViewModel @Inject constructor(
@@ -25,179 +29,119 @@ class RegistrationViewModel @Inject constructor(
     private val signInWithFacebookUseCase: SignInWithFacebookUseCase,
     private val userDataPreferences: UserDataPreferences
 ) : ViewModel() {
+    private val _uiState = MutableStateFlow(RegistrationUiState())
+    val uiState = _uiState.asStateFlow()
 
-    private val _uiState =
-        MutableStateFlow<RegistrationUiState>(
-            RegistrationUiState.Idle
+    private val _effects = Channel<RegistrationEffect>(Channel.BUFFERED)
+    val effects = _effects.receiveAsFlow()
+    private var operationInProgress = false
+
+    fun clearNicknameError() = _uiState.update { it.copy(nicknameError = null, generalError = null) }
+    fun clearEmailError() = _uiState.update { it.copy(emailError = null, generalError = null) }
+    fun clearPasswordError() = _uiState.update { it.copy(passwordError = null, confirmPasswordError = null, generalError = null) }
+    fun clearConfirmPasswordError() = _uiState.update { it.copy(confirmPasswordError = null, generalError = null) }
+    fun clearError() = _uiState.update { it.copy(generalError = null) }
+
+    fun registerWithEmail(nickname: String, email: String, password: String, confirmPassword: String) {
+        if (operationInProgress) return
+        val name = nickname.trim()
+        val address = email.trim()
+        val errors = RegistrationUiState(
+            nicknameError = when {
+                name.isBlank() -> "Enter a nickname"
+                name.length < 3 -> "Nickname must be at least 3 characters"
+                else -> null
+            },
+            emailError = if (!Patterns.EMAIL_ADDRESS.matcher(address).matches()) "Enter a valid email" else null,
+            passwordError = when {
+                password.isBlank() -> "Enter a password"
+                password.length < 6 -> "Use at least 6 characters"
+                else -> null
+            },
+            confirmPasswordError = if (password != confirmPassword) "Passwords do not match" else null
         )
-
-    val uiState: StateFlow<RegistrationUiState> =
-        _uiState.asStateFlow()
-
-    fun registerWithEmail(
-        nickname: String,
-        email: String,
-        password: String,
-        confirmPassword: String
-    ) {
-        if (isLoading()) return
-
-        val trimmedNickname = nickname.trim()
-        val trimmedEmail = email.trim()
-
-        val validationError = validateRegistration(
-            nickname = trimmedNickname,
-            email = trimmedEmail,
-            password = password,
-            confirmPassword = confirmPassword
-        )
-
-        if (validationError != null) {
-            showError(validationError)
+        if (listOf(errors.nicknameError, errors.emailError, errors.passwordError, errors.confirmPasswordError).any { it != null }) {
+            _uiState.value = errors
             return
         }
-
-        authenticate {
-            registerWithEmailUseCase(
-                nickname = trimmedNickname,
-                email = trimmedEmail,
-                password = password
-            )
-        }
+        authenticate { registerWithEmailUseCase(nickname = name, email = address, password = password) }
     }
 
-    fun signInWithGoogle(idToken: String) {
-        authenticate {
-            signInWithGoogleUseCase(idToken)
-        }
-    }
-
-    fun signInWithFacebook(accessToken: String) {
-        authenticate {
-            signInWithFacebookUseCase(accessToken)
-        }
-    }
-
-    fun onSocialSignInStarted() {
-        if (!isLoading()) {
-            _uiState.value = RegistrationUiState.Loading
-        }
+    fun onSocialSignInStarted(): Boolean {
+        if (operationInProgress) return false
+        operationInProgress = true
+        _uiState.update { it.copy(isLoading = true, generalError = null) }
+        return true
     }
 
     fun onSocialSignInCancelled() {
-        if (isLoading()) {
-            _uiState.value = RegistrationUiState.Idle
-        }
+        if (!operationInProgress) return
+        operationInProgress = false
+        _uiState.update { it.copy(isLoading = false) }
     }
 
     fun onSocialSignInError(exception: Exception) {
-        handleError(exception)
+        if (!operationInProgress) return
+        operationInProgress = false
+        _uiState.update { it.copy(isLoading = false, generalError = exception.toFriendlyMessage()) }
+    }
+
+    fun signInWithGoogle(idToken: String) = authenticate(alreadyStarted = true) {
+        signInWithGoogleUseCase(idToken)
+    }
+
+    fun signInWithFacebook(accessToken: String) = authenticate(alreadyStarted = true) {
+        signInWithFacebookUseCase(accessToken)
     }
 
     fun signInAsGuest() {
-        if (isLoading()) return
-
+        if (operationInProgress) return
+        operationInProgress = true
         viewModelScope.launch {
-            _uiState.value = RegistrationUiState.Loading
-
+            _uiState.update { it.copy(isLoading = true, generalError = null) }
             try {
                 userDataPreferences.setIsLogined(true)
-                _uiState.value = RegistrationUiState.Success
+                _effects.send(RegistrationEffect.NavigateToHome)
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                handleError(e)
+                _uiState.update { it.copy(generalError = e.toFriendlyMessage()) }
+            } finally {
+                operationInProgress = false
+                _uiState.update { it.copy(isLoading = false) }
             }
         }
     }
 
-    fun clearError() {
-        if (_uiState.value is RegistrationUiState.Error) {
-            _uiState.value = RegistrationUiState.Idle
-        }
-    }
-
-    private var isFirebaseAuthenticationRunning = false
-
-    private fun authenticate(
-        action: suspend () -> AuthUser
-    ) {
-        if (isFirebaseAuthenticationRunning) return
-
-        isFirebaseAuthenticationRunning = true
+    private fun authenticate(alreadyStarted: Boolean = false, action: suspend () -> AuthUser) {
+        if (!alreadyStarted) {
+            if (operationInProgress) return
+            operationInProgress = true
+        } else if (!operationInProgress) return
 
         viewModelScope.launch {
-            _uiState.value = RegistrationUiState.Loading
-
+            _uiState.update { it.copy(isLoading = true, generalError = null) }
             try {
                 val user = action()
-                completeAuthentication(user)
-
+                userDataPreferences.setUserData(user)
+                userDataPreferences.setIsLogined(true)
+                _effects.send(RegistrationEffect.NavigateToHome)
             } catch (e: CancellationException) {
                 throw e
-
             } catch (e: Exception) {
-                handleError(e)
-
+                _uiState.update { it.copy(generalError = e.toFriendlyMessage()) }
             } finally {
-                isFirebaseAuthenticationRunning = false
+                operationInProgress = false
+                _uiState.update { it.copy(isLoading = false) }
             }
         }
     }
 
-    private suspend fun completeAuthentication(user: AuthUser) {
-        userDataPreferences.setUserData(user)
-        userDataPreferences.setIsLogined(true)
-
-        _uiState.value = RegistrationUiState.Success
-    }
-
-    private fun validateRegistration(
-        nickname: String,
-        email: String,
-        password: String,
-        confirmPassword: String
-    ): String? {
-        return when {
-            nickname.isBlank() ->
-                "Please enter your nickname"
-
-            nickname.length < 3 ->
-                "Nickname must contain at least 3 characters"
-
-            !Patterns.EMAIL_ADDRESS.matcher(email).matches() ->
-                "Please enter a valid email address"
-
-            password.length < 6 ->
-                "Password must contain at least 6 characters"
-
-            password != confirmPassword ->
-                "Passwords do not match"
-
-            else -> null
-        }
-    }
-
-    private fun handleError(exception: Exception) {
-        val message = when (exception) {
-            is FirebaseAuthUserCollisionException ->
-                "An account with this email already exists"
-
-            is FirebaseTooManyRequestsException ->
-                "Too many requests. Please try again later"
-
-            else ->
-                exception.localizedMessage ?: "Authentication failed"
-        }
-
-        showError(message)
-    }
-
-    private fun showError(message: String) {
-        _uiState.value = RegistrationUiState.Error(message)
-    }
-
-    private fun isLoading(): Boolean {
-        return _uiState.value is RegistrationUiState.Loading
+    private fun Exception.toFriendlyMessage(): String = when (this) {
+        is FirebaseAuthUserCollisionException -> "An account with this email already exists"
+        is FirebaseAuthWeakPasswordException -> "Choose a stronger password"
+        is FirebaseTooManyRequestsException -> "Too many attempts. Please try again later"
+        is FirebaseNetworkException -> "Check your internet connection and try again"
+        else -> "Something went wrong. Please try again"
     }
 }

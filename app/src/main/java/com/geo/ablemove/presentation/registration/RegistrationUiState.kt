@@ -1,8 +1,14 @@
 package com.geo.ablemove.presentation.registration
 
-sealed interface RegistrationUiState {
-    data object Idle : RegistrationUiState
-    data object Loading : RegistrationUiState
-    data object Success : RegistrationUiState
-    data class Error(val message: String) : RegistrationUiState
+data class RegistrationUiState(
+    val isLoading: Boolean = false,
+    val nicknameError: String? = null,
+    val emailError: String? = null,
+    val passwordError: String? = null,
+    val confirmPasswordError: String? = null,
+    val generalError: String? = null
+)
+
+sealed interface RegistrationEffect {
+    data object NavigateToHome : RegistrationEffect
 }

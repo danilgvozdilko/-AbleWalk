@@ -33,6 +33,9 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -43,6 +46,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -75,6 +79,7 @@ fun RegistrationRoute(
 ) {
     val activity = LocalActivity.current as ComponentActivity
     val scope = rememberCoroutineScope()
+    val snackbarHostState = remember { SnackbarHostState() }
 
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -90,20 +95,30 @@ fun RegistrationRoute(
         FacebookSignInManager()
     }
 
-    LaunchedEffect(uiState) {
-        if (uiState is RegistrationUiState.Success) {
-            onRegistrationSuccess()
+    LaunchedEffect(viewModel) {
+        viewModel.effects.collect { effect ->
+            when (effect) {
+                RegistrationEffect.NavigateToHome -> onRegistrationSuccess()
+            }
         }
     }
 
+    LaunchedEffect(uiState.generalError) {
+        uiState.generalError?.let { snackbarHostState.showSnackbar(it) }
+    }
+
+    Scaffold(
+        containerColor = Color.Transparent,
+        snackbarHost = { SnackbarHost(snackbarHostState) }
+    ) { scaffoldPadding ->
     RegistrationScreen(
+        modifier = Modifier.padding(scaffoldPadding),
         uiState = uiState,
 
         onRegisterClick = viewModel::registerWithEmail,
 
         onGoogleClick = {
-            if (uiState !is RegistrationUiState.Loading) {
-                viewModel.onSocialSignInStarted()
+            if (viewModel.onSocialSignInStarted()) {
 
                 scope.launch {
                     try {
@@ -135,8 +150,7 @@ fun RegistrationRoute(
         },
 
         onFacebookClick = {
-            if (uiState !is RegistrationUiState.Loading) {
-                viewModel.onSocialSignInStarted()
+            if (viewModel.onSocialSignInStarted()) {
 
                 scope.launch {
                     try {
@@ -174,12 +188,17 @@ fun RegistrationRoute(
 
         onSignInClick = onNavigateToLogin,
 
-        onClearError = viewModel::clearError
+        onClearNicknameError = viewModel::clearNicknameError,
+        onClearEmailError = viewModel::clearEmailError,
+        onClearPasswordError = viewModel::clearPasswordError,
+        onClearConfirmPasswordError = viewModel::clearConfirmPasswordError
     )
+    }
 }
 
 @Composable
 fun RegistrationScreen(
+    modifier: Modifier = Modifier,
     uiState: RegistrationUiState,
     onRegisterClick: (
         nickname: String,
@@ -191,7 +210,10 @@ fun RegistrationScreen(
     onFacebookClick: () -> Unit,
     onGuestClick: () -> Unit,
     onSignInClick: () -> Unit,
-    onClearError: () -> Unit
+    onClearNicknameError: () -> Unit,
+    onClearEmailError: () -> Unit,
+    onClearPasswordError: () -> Unit,
+    onClearConfirmPasswordError: () -> Unit
 ) {
     var nickname by rememberSaveable { mutableStateOf("") }
     var email by rememberSaveable { mutableStateOf("") }
@@ -207,9 +229,9 @@ fun RegistrationScreen(
     }
 
     val colorScheme = MaterialTheme.colorScheme
-    val isLoading = uiState is RegistrationUiState.Loading
-    val error = (uiState as? RegistrationUiState.Error)?.message
+    val isLoading = uiState.isLoading
 
+    Box(modifier = modifier.fillMaxSize()) {
     Background {
         Column(
             modifier = Modifier
@@ -307,7 +329,7 @@ fun RegistrationScreen(
                     value = nickname,
                     onValueChange = {
                         nickname = it
-                        onClearError()
+                        onClearNicknameError()
                     },
                     placeholder = stringResource(
                         R.string.registration_nickname_placeholder
@@ -317,6 +339,11 @@ fun RegistrationScreen(
                         imeAction = ImeAction.Next
                     )
                 )
+
+                uiState.nicknameError?.let { message ->
+                    Spacer(Modifier.height(6.dp))
+                    Text(message, color = colorScheme.error, style = MaterialTheme.typography.bodySmall)
+                }
 
                 Spacer(Modifier.height(22.dp))
 
@@ -333,7 +360,7 @@ fun RegistrationScreen(
                     value = email,
                     onValueChange = {
                         email = it
-                        onClearError()
+                        onClearEmailError()
                     },
                     placeholder = stringResource(
                         R.string.registration_email_placeholder
@@ -351,6 +378,11 @@ fun RegistrationScreen(
                     )
                 )
 
+                uiState.emailError?.let { message ->
+                    Spacer(Modifier.height(6.dp))
+                    Text(message, color = colorScheme.error, style = MaterialTheme.typography.bodySmall)
+                }
+
                 Spacer(Modifier.height(22.dp))
 
                 // Password
@@ -366,7 +398,7 @@ fun RegistrationScreen(
                     value = password,
                     onValueChange = {
                         password = it
-                        onClearError()
+                        onClearPasswordError()
                     },
                     placeholder = stringResource(
                         R.string.registration_password_placeholder
@@ -401,6 +433,11 @@ fun RegistrationScreen(
                     )
                 )
 
+                uiState.passwordError?.let { message ->
+                    Spacer(Modifier.height(6.dp))
+                    Text(message, color = colorScheme.error, style = MaterialTheme.typography.bodySmall)
+                }
+
                 Spacer(Modifier.height(22.dp))
 
                 // Confirm password
@@ -416,7 +453,7 @@ fun RegistrationScreen(
                     value = confirmPassword,
                     onValueChange = {
                         confirmPassword = it
-                        onClearError()
+                        onClearConfirmPasswordError()
                     },
                     placeholder = stringResource(
                         R.string.registration_confirm_password_placeholder
@@ -454,18 +491,12 @@ fun RegistrationScreen(
                     )
                 )
 
-                Spacer(Modifier.height(24.dp))
-
-                // Validation error
-                if (error != null) {
-                    Text(
-                        text = error,
-                        color = colorScheme.error,
-                        style = MaterialTheme.typography.bodySmall
-                    )
-
-                    Spacer(Modifier.height(12.dp))
+                uiState.confirmPasswordError?.let { message ->
+                    Spacer(Modifier.height(6.dp))
+                    Text(message, color = colorScheme.error, style = MaterialTheme.typography.bodySmall)
                 }
+
+                Spacer(Modifier.height(24.dp))
 
                 // Create account
                 Button(
@@ -619,6 +650,7 @@ fun RegistrationScreen(
 
             Spacer(Modifier.height(24.dp))
         }
+    }
     }
 }
 
