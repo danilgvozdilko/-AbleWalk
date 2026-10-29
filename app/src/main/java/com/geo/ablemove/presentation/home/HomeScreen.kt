@@ -25,16 +25,6 @@ import com.google.firebase.auth.FirebaseAuth
 fun HomeScreen(
     onProfileClick: () -> Unit
 ) {
-//    FirebaseAuth.getInstance()
-//        .currentUser
-//        ?.sendEmailVerification()
-//        ?.addOnSuccessListener {
-//            Log.d("FirebaseEmail", "Verification email request successful")
-//        }
-//        ?.addOnFailureListener { exception ->
-//            Log.e("FirebaseEmail", "Verification failed", exception)
-//        }
-
     val navController = rememberNavController()
 
     val backStackEntry by navController
